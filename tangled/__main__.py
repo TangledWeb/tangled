@@ -7,6 +7,17 @@ from .registry import process_registry
 
 
 def main(argv=None):
+    """Entry point for running a tangled command.
+
+    Such commands are registered via the ``tangled.scripts`` entry
+    point like so::
+
+        [tangled.scripts]
+        mycommand = mypackage.mymodule:MyCommand
+
+    The command can be run as ``tangled mycommand ...``.
+
+    """
     parser = argparse.ArgumentParser(
         description='Run a tangled command',
     )
