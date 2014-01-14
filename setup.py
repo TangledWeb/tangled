@@ -5,7 +5,7 @@ setup(
     name='tangled',
     version='0.1.dev0',
     description='Tangled namespace and utilities',
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
     packages=find_packages(),
     extras_require={
         'dev': (
