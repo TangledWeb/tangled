@@ -51,14 +51,37 @@ def load_object(obj, obj_name=None, package=None, level=2):
     path (if the name is passed both ways, the name in the path will
     win).
 
+    Examples::
+
+        >>> load_object('tangled.util:load_object')
+        <function load_object at ...>
+        >>> load_object('tangled.util', 'load_object')
+        <function load_object at ...>
+        >>> load_object('tangled.util:load_object', 'IGNORED')
+        <function load_object at ...>
+        >>> load_object('.util:load_object', package='tangled')
+        <function load_object at ...>
+        >>> load_object('.util:load_object')
+        <function load_object at ...>
+        >>> load_object('.:load_object', package='tangled.util')
+        <function load_object at ...>
+        >>> load_object(':load_object', package='tangled.util')
+        <function load_object at ...>
+        >>> load_object(load_object)
+        <function load_object at ...>
+        >>> load_object(load_object, 'IGNORED', 'IGNORED', 'IGNORED')
+        <function load_object at ...>
+
     """
     if isinstance(obj, str):
-        if obj.startswith('.') and package is None:
-            package = caller_package(level)
         if ':' in obj:
             module_name, obj_name = obj.split(':')
+            if not module_name:
+                module_name = '.'
         else:
             module_name = obj
+        if module_name.startswith('.') and package is None:
+            package = caller_package(level)
         obj = importlib.import_module(module_name, package)
         if obj_name:
             attrs = obj_name.split('.')
