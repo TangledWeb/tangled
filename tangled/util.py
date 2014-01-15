@@ -79,13 +79,13 @@ def asset_path(path, *rel_path):
 
     Examples::
 
-        >>> asset_path('tangled.util')  # doctest: +ELLIPSIS
+        >>> asset_path('tangled.util')
         '.../tangled/tangled'
-        >>> asset_path('tangled.util:x')  # doctest: +ELLIPSIS
+        >>> asset_path('tangled.util:x')
         '.../tangled/tangled/x'
-        >>> asset_path('tangled.util', 'x')  # doctest: +ELLIPSIS
+        >>> asset_path('tangled.util', 'x')
         '.../tangled/tangled/x'
-        >>> asset_path('tangled.util:x', 'y')  # doctest: +ELLIPSIS
+        >>> asset_path('tangled.util:x', 'y')
         '.../tangled/tangled/x/y'
 
     """
@@ -163,7 +163,7 @@ def get_items_with_key_prefix(items, prefix, strip_prefix=True, processors=()):
     return items.__class__(filtered)
 
 
-def load_doctests(module, *modules):
+def load_doctests(module, *modules, optionflags=doctest.ELLIPSIS):
     """Add doctests from the specified modules.
 
     There are two ways to use this. Simple case::
@@ -184,7 +184,8 @@ def load_doctests(module, *modules):
     def load_tests(loader, tests, ignore):
         finder = doctest.DocTestFinder(exclude_empty=False)
         for module in modules:
-            suite = doctest.DocTestSuite(module, test_finder=finder)
+            suite = doctest.DocTestSuite(
+                module, test_finder=finder, optionflags=optionflags)
             tests.addTests(suite)
         return tests
     return load_tests
