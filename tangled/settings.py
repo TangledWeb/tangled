@@ -77,7 +77,9 @@ def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
 
     """
     file_name = abs_path(path)
-    parser = configparser.ConfigParser(delimiters='=')
+    defaults = {'__here__': os.path.dirname(file_name)}
+    parser = configparser.ConfigParser(delimiters='=', defaults=defaults)
+
     with open(file_name) as fp:
         parser.read_file(fp)
 
