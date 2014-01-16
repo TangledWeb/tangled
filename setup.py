@@ -13,6 +13,7 @@ setup(
             'pep8>=1.4.6',
             'pyflakes>=0.7.3',
             'Sphinx>=1.2',
+            'sphinx_rtd_theme>=0.1.5',
         )
     },
     entry_points="""
