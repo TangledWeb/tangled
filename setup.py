@@ -12,6 +12,8 @@ setup(
             'coverage>=3.7.1',
             'pep8>=1.4.6',
             'pyflakes>=0.7.3',
+            'pytest>=2.5.1',
+            'pytest-cov>=1.6',
             'Sphinx>=1.2',
             'sphinx_rtd_theme>=0.1.5',
         )
