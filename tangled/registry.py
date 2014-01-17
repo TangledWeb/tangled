@@ -24,9 +24,19 @@ class ARegistry(MutableMapping):
         """Remove a component."""
         raise NotImplementedError
 
-    def has_key(self, key):
-        """Are there any components registered under ``key``?"""
-        # TODO: Rename?
+    @abstractmethod
+    def has_any(self, key):
+        """Are there any components registered under ``key``?
+
+        This looks for ``key`` without considering differentiators.
+
+        This is a companion to :meth:`get_all`. You might use it
+        like this::
+
+            if registry.has_any('kale'):
+                kale = registry.get_all('kale')
+
+        """
         raise NotImplementedError
 
 
@@ -72,7 +82,7 @@ class Registry(ARegistry):
     def remove(self, key, differentiator=None):
         del self._components[key][differentiator]
 
-    def has_key(self, key):
+    def has_any(self, key):
         return key in self._components
 
     # MutableMapping interface. Keys must be either a hashable object
