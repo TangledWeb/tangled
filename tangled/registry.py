@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from collections import MutableMapping, MutableSequence, OrderedDict
 
+from tangled.decorators import reify
+
 
 class ARegistry(MutableMapping):
 
@@ -44,9 +46,10 @@ class Registry(ARegistry):
 
     """A component registry."""
 
-    def __init__(self):
+    @reify
+    def _components(self):
         # key => {differentiator => component}
-        self._components = OrderedDict()
+        return OrderedDict()
 
     def register(self, key, component, differentiator=None, replace=False):
         if key not in self._components:
