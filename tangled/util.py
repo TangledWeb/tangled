@@ -23,8 +23,8 @@ NOT_SET = type('NOT_SET', (), {
 def fully_qualified_name(obj):
     """Get the fully qualified name for an object.
 
-    >>> fully_qualified_name(fully_qualified_name)
-    'tangled.util.fully_qualified_name'
+    >>> fully_qualified_name(object)
+    'builtins.object'
 
     """
     return '{}.{}'.format(obj.__module__, obj.__qualname__)
@@ -60,8 +60,6 @@ def load_object(obj, obj_name=None, package=None, level=2):
         >>> load_object('tangled.util:load_object', 'IGNORED')
         <function load_object at ...>
         >>> load_object('.util:load_object', package='tangled')
-        <function load_object at ...>
-        >>> load_object('.util:load_object')
         <function load_object at ...>
         >>> load_object('.:load_object', package='tangled.util')
         <function load_object at ...>
@@ -184,34 +182,6 @@ def get_items_with_key_prefix(items, prefix, strip_prefix=True, processors=()):
         processors = (lambda k, v: (k[prefix_len:], v),) + processors
     filtered = filter_items(items, include=include, processors=processors)
     return items.__class__(filtered)
-
-
-def load_doctests(module, *modules, optionflags=doctest.ELLIPSIS):
-    """Add doctests from the specified modules.
-
-    There are two ways to use this. Simple case::
-
-        # test_util.py
-        load_tests = load_doctests('tangled.util')
-
-    If you need to load other tests in `load_tests()`::
-
-        # test_util.py
-        def load_tests(loader, tests, ignore):
-            load_doctests('tangled.util')(loader, tests, ignore)
-            # Load some other tests here
-            return tests
-
-    """
-    modules = (module,) + modules
-    def load_tests(loader, tests, ignore):
-        finder = doctest.DocTestFinder(exclude_empty=False)
-        for module in modules:
-            suite = doctest.DocTestSuite(
-                module, test_finder=finder, optionflags=optionflags)
-            tests.addTests(suite)
-        return tests
-    return load_tests
 
 
 ASCII_ALPHANUMERIC = string.ascii_letters + string.digits

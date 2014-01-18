@@ -4,9 +4,6 @@ from tangled import converters
 from tangled import util
 
 
-load_tests = util.load_doctests('tangled.converters')
-
-
 class Test_as_list_of_objects(unittest.TestCase):
 
     def test_empty_string(self):

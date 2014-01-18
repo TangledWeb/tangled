@@ -13,7 +13,7 @@ class TestCommand(ACommand):
 
     I was having some problems with Nose and Python 3.3 namespace
     packages. Hopefully that will be fixed soon, and this can go
-    away (along with :func:`tangled.util.load_doctests`).
+    away.
 
     """
 

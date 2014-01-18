@@ -5,9 +5,6 @@ import unittest
 from tangled import util
 
 
-load_tests = util.load_doctests('tangled.util')
-
-
 class Test_load_object(unittest.TestCase):
 
     def test_load_object(self):
