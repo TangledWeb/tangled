@@ -27,6 +27,10 @@ class ARegistry(MutableMapping):
         raise NotImplementedError
 
     @abstractmethod
+    def contains(self, key, differentiator=None):
+        raise NotImplementedError
+
+    @abstractmethod
     def has_any(self, key):
         """Are there any components registered under ``key``?
 
@@ -85,6 +89,10 @@ class Registry(ARegistry):
     def remove(self, key, differentiator=None):
         del self._components[key][differentiator]
 
+    def contains(self, key, differentiator=None):
+        _components = self._components
+        return key in _components and differentiator in _components[key]
+
     def has_any(self, key):
         return key in self._components
 
@@ -109,10 +117,9 @@ class Registry(ARegistry):
 
     def __getitem__(self, key):
         key, differentiator = self._get_key_and_differentiator(key)
-        _components = self._components
-        if not (key in _components and differentiator in _components[key]):
-            raise KeyError((key, differentiator))
-        return _components[key][differentiator]
+        if not self.contains(key, differentiator):
+            raise KeyError([key, differentiator])
+        return self._components[key][differentiator]
 
     def __delitem__(self, key):
         key, differentiator = self._get_key_and_differentiator(key)
