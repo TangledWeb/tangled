@@ -23,6 +23,7 @@ setup(
     tangled = tangled.__main__:main
 
     [tangled.scripts]
+    scaffold = tangled.scripts:ScaffoldCommand
     test = tangled.scripts:TestCommand
 
     """,
