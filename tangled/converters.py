@@ -1,7 +1,8 @@
+import os
 from collections import OrderedDict
 from functools import partial
 
-from tangled.util import load_object
+from tangled.util import abs_path, load_object
 
 
 BOOL_STR_MAP = {
@@ -43,6 +44,13 @@ def get_converter(converter):
     else:
         raise TypeError('Unknown converter: {}'.format(converter))
     return converter
+
+
+def as_abs_path(v):
+    v = v.strip()
+    if not v:
+        return None
+    return abs_path(v)
 
 
 def as_object(v):
