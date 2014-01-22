@@ -12,3 +12,4 @@ script:
     --cov tangled/tangled
     --doctest-modules
     tangled/tangled
+  - sphinx-build -E ./tangled/docs docs
