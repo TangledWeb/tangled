@@ -5,4 +5,10 @@ install:
   - pip install -e .[dev]
 script:
   - cd ..
-  - py.test --ignore tangled/tangled/__main__.py --ignore tangled/setup.py tangled/tangled
+  - >
+    py.test
+    --ignore tangled/setup.py
+    --ignore tangled/tangled/__main__.py
+    --cov tangled/tangled
+    --doctest-modules
+    tangled/tangled
