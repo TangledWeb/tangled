@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from functools import partial
 
 from tangled.util import load_object
@@ -152,6 +153,65 @@ def as_first_of(a_converter, *converters):
             except ValueError:
                 pass
         raise TypeError('Could not convert {}'.format(v))
+    return converter
+
+
+def as_args(*converters, item_sep=', '):
+    r"""Make a converter that converts lines of args using ``converters``.
+
+    ``None`` can be passed to indicate that an arg doesn't require
+    conversion.
+
+    This would typically be used to parse lines of args from a settings
+    file::
+
+        [app]
+        args = a 1
+               b 2
+
+    Which would be translated into something like this, where
+    ``my_func`` is the function (or class) you want to pass the args
+    to::
+
+        >>> lines = 'a, 1\nb, 2'
+        >>> my_converter = as_args(None, 'int')
+        >>> my_func = lambda x, y: (x, y)
+        >>> for arg_spec in my_converter(lines):
+        ...     my_func(*arg_spec['args'], **arg_spec['kwargs'])
+        ...
+        ('a', 1)
+        ('b', 2)
+
+    You can also specify keyword args using tuples of
+    ``(name, converter)``::
+
+        >>> my_func = lambda a, b=None: (a, b)
+        >>> my_converter = as_args('int', ('b', 'str'))
+        >>> my_converter('1, 2')[0]['args'] == [1]
+        True
+        >>> my_converter('1, 2')[0]['kwargs'] == {'b': '2'}
+        True
+
+    """
+    def converter(v):
+        v = as_seq_of_seq(v, item_sep=item_sep)
+        args_list = []
+        for line in v:
+            args = []
+            kwargs = OrderedDict()
+            for arg_val, arg_converter in zip(line, converters):
+                arg_name = None
+                if isinstance(arg_converter, tuple):
+                    arg_name, arg_converter = arg_converter
+                if arg_converter is not None:
+                    arg_converter = get_converter(arg_converter)
+                    arg_val = arg_converter(arg_val)
+                if arg_name is None:
+                    args.append(arg_val)
+                else:
+                    kwargs[arg_name] = arg_val
+            args_list.append({'args': args, 'kwargs': kwargs})
+        return args_list
     return converter
 
 
