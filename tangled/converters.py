@@ -24,7 +24,7 @@ def get_converter(converter):
 
     Otherwise, ``converter`` can be any builtin name (some of which are
     handled specially), the name of a converter in this module, or the
-    name of a converter in this module without its 'as_' prefix.
+    name of a converter in this module without its ``as_`` prefix.
 
     """
     if not isinstance(converter, str):
