@@ -27,3 +27,12 @@ class TestSettings(unittest.TestCase):
         }
         settings = tangled.settings.parse_settings(settings, prefix='a.')
         self.assertEqual(settings, {'a': 1, 'b': 2})
+
+    def test_parse_settings_with_converters(self):
+        settings = {
+            '(int)n': '1',
+            '(bool)b': 'true',
+            '(tuple)t': 'a b c'
+        }
+        settings = tangled.settings.parse_settings(settings)
+        self.assertEqual(settings, {'n': 1, 'b': True, 't': ('a', 'b', 'c')})

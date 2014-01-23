@@ -1,8 +1,12 @@
 import configparser
 import os
+import re
 
 from tangled import converters
 from tangled.util import abs_path, get_items_with_key_prefix
+
+
+CONVERTER_KEY_RE = re.compile(r'^\((?P<converter>[a-z_]+)\)(?P<k>.+)$')
 
 
 def parse_settings(settings, conversion_map={}, defaults={}, required=(),
@@ -22,9 +26,9 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
     For each setting...
 
         - If the key for the setting specifies a converter via the
-          `key:converter` syntax, the specified function will be called
-          to convert its value (the function must be a builtin or a
-          function from :mod:`tangled.converters`).
+          ``(converter)key`` syntax, the specified converter will be
+          called to convert its value (the converter must be a builtin
+          or a function from :mod:`tangled.converters`).
 
         - If the key for the setting is in ``conversion_map``, the
           function it maps to will be used to convert its value.
@@ -45,8 +49,10 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
         settings.setdefault(k, v)
     for k, v in settings.items():
         if isinstance(v, str):
-            if ':' in k:
-                k, converter = k.split(':')
+            match = CONVERTER_KEY_RE.search(k)
+            if match:
+                k = match.group('k')
+                converter = match.group('converter')
                 converter = converters.get_converter(converter)
             elif k in conversion_map:
                 converter = converters.get_converter(conversion_map[k])
@@ -78,7 +84,7 @@ def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
     """
     file_name = abs_path(path)
     defaults = {'__here__': os.path.dirname(file_name)}
-    parser = configparser.ConfigParser(delimiters='=', defaults=defaults)
+    parser = configparser.ConfigParser(defaults=defaults)
 
     with open(file_name) as fp:
         parser.read_file(fp)
