@@ -4,12 +4,5 @@ python:
 install:
   - pip install -e .[dev]
 script:
-  - cd ..
-  - >
-    py.test
-    --ignore tangled/setup.py
-    --ignore tangled/tangled/__main__.py
-    --cov tangled/tangled
-    --doctest-modules
-    tangled/tangled
-  - sphinx-build -E ./tangled/docs docs
+  - nosetests
+  - sphinx-build -E docs docs/_build
