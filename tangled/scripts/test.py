@@ -21,7 +21,8 @@ class TestCommand(ACommand):
     def configure(cls, parser):
         parser.add_argument('--where', default=None)
         parser.add_argument(
-            '--with-coverage', action='store_true', default=True)
+            '--no-coverage', dest='with_coverage', action='store_false',
+            default=True)
         parser.add_argument('tests', nargs='*', default=None)
 
     def run(self):
