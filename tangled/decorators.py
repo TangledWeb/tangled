@@ -30,22 +30,19 @@ class cached_property:
 
     def __init__(self, fget):
         self.fget = fget
-        self.values = {}
         self.__name__ = fget.__name__
         self.__doc__ = fget.__doc__
 
     def __get__(self, obj, cls=None):
         if obj is None:  # property accessed via class
             return self
-        obj_id = id(obj)
-        if obj_id not in self.values:
-            self.values[obj_id] = self.fget(obj)
-        return self.values[obj_id]
+        if self.__name__ not in obj.__dict__:
+            obj.__dict__[self.__name__] = self.fget(obj)
+        return obj.__dict__[self.__name__]
 
     def __set__(self, obj, value):
-        self.values[id(obj)] = value
+        obj.__dict__[self.__name__] = value
 
     def __delete__(self, obj):
-        obj_id = id(obj)
-        if obj_id in self.values:
-            del self.values[obj_id]
+        if self.__name__ in obj.__dict__:
+            del obj.__dict__[self.__name__]
