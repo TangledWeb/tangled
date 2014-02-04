@@ -13,7 +13,7 @@ setup(
             'nose>=1.3.0',
             'pep8>=1.4.6',
             'pyflakes>=0.7.3',
-            'Sphinx>=1.2',
+            'Sphinx>=1.2.1',
             'sphinx_rtd_theme>=0.1.5',
         )
     },
