@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tangled',
-    version='0.1.dev0',
+    version='0.1a1',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
     packages=find_packages(),
