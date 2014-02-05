@@ -22,6 +22,7 @@ setup(
     tangled = tangled.__main__:main
 
     [tangled.scripts]
+    release = tangled.scripts:ReleaseCommand
     scaffold = tangled.scripts:ScaffoldCommand
     test = tangled.scripts:TestCommand
 
