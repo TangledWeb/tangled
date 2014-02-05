@@ -21,9 +21,35 @@ class ReleaseCommand(ACommand):
         parser.add_argument('-t', '--tag')
         parser.add_argument('-c', '--change-log', default='CHANGELOG')
         parser.add_argument('--pre', action='store_true', default=False)
-        parser.add_argument('--release', action='store_true', default=False)
+        parser.add_argument('--create-tag', action='store_true', default=False)
+        parser.add_argument('--upload', action='store_true', default=False)
         parser.add_argument('--post', action='store_true', default=False)
         parser.add_argument('--full', action='store_true', default=False)
+
+    def run(self):
+        self.args.full = (
+            self.args.full or
+            not any((
+                self.args.pre, self.args.create_tag, self.args.upload,
+                self.args.post)))
+
+        if self.args.full:
+            self.args.pre = True
+            self.args.create_tag = True
+            self.args.upload = True
+            self.args.post = True
+
+        try:
+            if self.args.pre:
+                self.pre_release()
+            if self.args.create_tag:
+                self.create_tag()
+            if self.args.upload:
+                self.upload()
+            if self.args.post:
+                self.post_release()
+        except KeyboardInterrupt:
+            self.exit('\nAborted')
 
     @cached_property
     def release_version(self):
@@ -32,21 +58,6 @@ class ReleaseCommand(ACommand):
         else:
             release_version = input('Version for new release: ')
         return release_version
-
-    def run(self):
-        if self.args.full:
-            self.args.pre = self.args.release = self.args.post = True
-        try:
-            if self.args.pre:
-                self.pre_release()
-
-            if self.args.release:
-                self.release()
-
-            if self.args.post:
-                self.post_release()
-        except KeyboardInterrupt:
-            self.exit('\nAborted')
 
     def pre_release(self):
         release_version = self.release_version
@@ -62,11 +73,7 @@ class ReleaseCommand(ACommand):
             r'\s*')
 
         def change_log_on_match(match, lines, line):
-            old_release_date = match.group('release_date')
             lines.append('{} ({})\n'.format(release_version, today))
-            print(
-                'Release date updated for {} from {} to {}'
-                .format(release_version, old_release_date, today))
 
         self.update_file(
             self.args.change_log, change_log_pattern, change_log_on_match)
@@ -76,13 +83,9 @@ class ReleaseCommand(ACommand):
         def setup_on_match(match, lines, line):
             whitespace = match.group('whitespace')
             quote = match.group('quote')
-            old_version = match.group('old_version')
             lines.append(
                 '{ws}version={quote}{v}{quote},\n'
                 .format(ws=whitespace, v=release_version, quote=quote))
-            print(
-                'Version updated in setup.py from {} to {}'
-                .format(old_version, release_version))
 
         self.update_file('setup.py', setup_version_pattern, setup_on_match)
 
@@ -90,17 +93,18 @@ class ReleaseCommand(ACommand):
             'Prepare release {}'.format(release_version),
             [self.args.change_log, 'setup.py'])
 
-    def release(self):
+    def create_tag(self):
         tag = self.args.tag if self.args.tag else self.release_version
         check_call([
             'git', 'tag', '-a', tag, '-m',
             'Release version {}'.format(tag)])
         check_call(['git', 'log', '-p', '-1', tag])
-        push_tag = input('Push this tag? [y/N] ') or False
+        push_tag = input('\n\nPush this tag? [y/N] ') or False
         push_tag = as_bool(push_tag)
         if push_tag:
             check_call(['git', 'push', 'origin', tag])
 
+    def upload(self):
         upload_to_pypi = input('Create sdist and upload to PyPI? [y/N] ')
         upload_to_pypi = as_bool(upload_to_pypi or False)
         if upload_to_pypi:
@@ -112,8 +116,6 @@ class ReleaseCommand(ACommand):
         else:
             next_version = input(
                 'Version for new release (.dev0 will be appended): ')
-
-        next_version += '.dev0'
 
         with open(self.args.change_log) as fp:
             content = fp.read()
@@ -130,21 +132,19 @@ class ReleaseCommand(ACommand):
             ])
             fp.write(content)
 
+        next_version += '.dev0'
+
         def setup_on_match(match, lines, line):
             whitespace = match.group('whitespace')
             quote = match.group('quote')
-            release_version = match.group('old_version')
             lines.append(
                 '{ws}version={quote}{v}{quote},\n'
                 .format(ws=whitespace, v=next_version, quote=quote))
-            print(
-                'Version updated in setup.py from {} to {}'
-                .format(release_version, next_version))
 
         self.update_file('setup.py', setup_version_pattern, setup_on_match)
 
         self.commit_or_abort(
-            'Return to development: {}'.format(next_version),
+            'Back to development: {}'.format(next_version),
             [self.args.change_log, 'setup.py'])
 
     def update_file(self, file_name, pattern, on_match, on_not_found=None):
