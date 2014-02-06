@@ -99,10 +99,6 @@ class ReleaseCommand(ACommand):
             'git', 'tag', '-a', tag, '-m',
             'Release version {}'.format(tag)])
         check_call(['git', 'log', '-p', '-1', tag])
-        push_tag = input('\n\nPush this tag? [y/N] ') or False
-        push_tag = as_bool(push_tag)
-        if push_tag:
-            check_call(['git', 'push', 'origin', tag])
 
     def upload(self):
         upload_to_pypi = input('Create sdist and upload to PyPI? [y/N] ')
