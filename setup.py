@@ -6,6 +6,9 @@ setup(
     version='0.1a2.dev0',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
+    url='http://tangledframework.org/',
+    author='Wyatt Baldwin',
+    author_email='self@wyattbaldwin.com',
     packages=find_packages(),
     extras_require={
         'dev': (
