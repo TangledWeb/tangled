@@ -32,6 +32,7 @@ setup(
     [tangled.scripts]
     release = tangled.scripts:ReleaseCommand
     scaffold = tangled.scripts:ScaffoldCommand
+    python = tangled.scripts:ShellCommand
     test = tangled.scripts:TestCommand
 
     """,
