@@ -20,6 +20,7 @@ class ReleaseCommand(ACommand):
         parser.add_argument('-n', '--next-version')
         parser.add_argument('-t', '--tag')
         parser.add_argument('-c', '--change-log', default='CHANGELOG')
+        parser.add_argument('-y', '--yes', action='store_true', default=False)
         parser.add_argument('--pre', action='store_true', default=False)
         parser.add_argument('--create-tag', action='store_true', default=False)
         parser.add_argument('--upload', action='store_true', default=False)
@@ -101,8 +102,11 @@ class ReleaseCommand(ACommand):
         check_call(['git', 'log', '-p', '-1', tag])
 
     def upload(self):
-        upload_to_pypi = input('Create sdist and upload to PyPI? [y/N] ')
-        upload_to_pypi = as_bool(upload_to_pypi or False)
+        if self.args.yes:
+            upload_to_pypi = True
+        else:
+            upload_to_pypi = input('Create sdist and upload to PyPI? [y/N] ')
+            upload_to_pypi = as_bool(upload_to_pypi or False)
         if upload_to_pypi:
             check_call(['python', 'setup.py', 'sdist', 'register', 'upload'])
 
@@ -167,10 +171,14 @@ class ReleaseCommand(ACommand):
 
     def commit_or_abort(self, msg, files):
         check_call(['git', 'diff'] + files)
-        commit = input('\n\nCommit this? [Y/n] ') or True
-        commit = as_bool(commit)
+        if self.args.yes:
+            commit = True
+        else:
+            commit = input('\n\nCommit this? [Y/n] ') or True
+            commit = as_bool(commit)
         if commit:
-            msg = input('Commit message ["{}"] '.format(msg)) or msg
+            if not self.args.yes:
+                msg = input('Commit message ["{}"] '.format(msg)) or msg
             check_call(['git', 'commit', '-m', msg] + files)
         else:
             self.exit('Aborted')
