@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 setup(
@@ -9,7 +9,12 @@ setup(
     url='http://tangledframework.org/',
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
-    packages=find_packages(),
+    packages=[
+        'tangled',
+        'tangled.scripts',
+        'tangled.tests',
+        'tangled.tests.dummy_package',
+    ],
     extras_require={
         'dev': (
             'coverage>=3.7.1',
@@ -30,10 +35,10 @@ setup(
     test = tangled.scripts:TestCommand
 
     """,
-    classifiers=(
+    classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-    ),
+    ],
 )
