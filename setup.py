@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tangled',
-    version='0.1a2',
+    version='0.1a3.dev0',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
     url='http://tangledframework.org/',
