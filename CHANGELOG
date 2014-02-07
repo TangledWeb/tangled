@@ -1,7 +1,11 @@
-0.1a4 (unreleased)
+0.1a4 (2014-02-06)
 ==================
 
-- No changes yet
+- Add `tangled python` command
+- Add -y flag to `tangled release` command (assume answer to all prompts is
+  yes)
+- Don't offer to push tags in `tangled release`; pushing stuff is outside the
+  scope of this tool.
 
 
 0.1a3 (2014-02-06)
