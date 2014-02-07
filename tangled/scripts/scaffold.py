@@ -116,6 +116,9 @@ class ScaffoldCommand(ACommand):
                         '# {}\n{}\n\n\n'
                         .format(rel_path, content or '# Empty file'))
                 else:
+                    os.remove(f)
+                    if f.endswith('.py.template'):
+                        f = f.rsplit('.', 1)[0]
                     with open(f, 'w') as fp:
                         fp.write(content)
 
