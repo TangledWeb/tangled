@@ -1,7 +1,10 @@
-0.1a5 (unreleased)
+0.1a5 (2014-02-09)
 ==================
 
-- No changes yet
+- Allow .py files in scaffolds to have a .template suffix. This is necessary
+  for .py files that use `${var}`s that aren't inside strings. Otherwise, those
+  files will cause a `SyntaxError` when the package containing the scaffold is
+  installed.
 
 
 0.1a4 (2014-02-06)
