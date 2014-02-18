@@ -72,7 +72,7 @@ def as_bool(v):
 def as_seq(v, sep=None, type_=tuple):
     """Convert a string to a sequence.
 
-    If ``v`` isn't a string, it will converted to the specified
+    If ``v`` isn't a string, it will be converted to the specified
     ``type_``.
 
     Examples::
