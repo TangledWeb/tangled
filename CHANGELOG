@@ -1,7 +1,9 @@
-0.1a6 (unreleased)
+0.1a6 (2014-03-06)
 ==================
 
-- No changes yet
+- Fix/improve package metadata.
+- Add workaround for setuptools "helpfully" adding __init__.py to
+  tangled namespace.
 
 
 0.1a5 (2014-02-09)

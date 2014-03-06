@@ -10,7 +10,7 @@ class bdist_egg(_bdist_egg):
 
 setup(
     name='tangled',
-    version='0.1a6.dev0',
+    version='0.1a6',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
     url='http://tangledframework.org/',
