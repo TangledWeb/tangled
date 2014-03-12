@@ -1,11 +1,4 @@
 from setuptools import setup
-from setuptools.command.bdist_egg import bdist_egg as _bdist_egg
-
-
-class bdist_egg(_bdist_egg):
-
-    def make_init_files(self):
-        return []
 
 
 setup(
@@ -52,7 +45,4 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
     ],
-    cmdclass={
-        'bdist_egg': bdist_egg,
-    }
 )
