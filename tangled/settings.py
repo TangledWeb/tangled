@@ -119,7 +119,7 @@ def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
         settings = base_settings
 
     if required:
-        _check_required(required)
+        _check_required(settings, required)
 
     return settings
 
