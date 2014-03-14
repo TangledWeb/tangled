@@ -10,7 +10,7 @@ CONVERTER_KEY_RE = re.compile(r'^\((?P<converter>[a-z_]+)\)(?P<k>.+)$')
 
 
 def parse_settings(settings, conversion_map={}, defaults={}, required=(),
-                   prefix=None, strip_prefix=True, processors=()):
+                   prefix=None, strip_prefix=True):
     """Convert the values of ``settings``.
 
     To convert only a subset of the settings, pass ``prefix``; only the
@@ -43,8 +43,7 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
     """
     parsed_settings = {}
     if prefix is not None:
-        settings = get_items_with_key_prefix(
-            settings, prefix, strip_prefix, processors)
+        settings = get_items_with_key_prefix(settings, prefix, strip_prefix)
     for k, v in defaults.items():
         settings.setdefault(k, v)
     for k, v in settings.items():
