@@ -63,7 +63,7 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
             v = converter(v)
         parsed_settings[k] = v
     if required:
-        _check_required(parsed_settings, required)
+        check_required(parsed_settings, required)
     return parsed_settings
 
 
@@ -119,12 +119,13 @@ def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
         settings = base_settings
 
     if required:
-        _check_required(settings, required)
+        check_required(settings, required)
 
     return settings
 
 
-def _check_required(settings, required):
+def check_required(settings, required):
+    """Ensure ``settings`` contains the ``required`` keys."""
     missing = []
     for r in required:
         if r not in settings:
