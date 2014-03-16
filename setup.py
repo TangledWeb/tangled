@@ -19,10 +19,10 @@ setup(
     extras_require={
         'dev': (
             'coverage>=3.7.1',
-            'nose>=1.3.0',
+            'nose>=1.3.1',
             'pep8>=1.4.6',
             'pyflakes>=0.7.3',
-            'Sphinx>=1.2.1',
+            'Sphinx>=1.2.2',
             'sphinx_rtd_theme>=0.1.5',
         )
     },
