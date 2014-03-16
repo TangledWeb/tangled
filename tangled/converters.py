@@ -123,8 +123,15 @@ as_tuple_of = partial(as_seq_of, type_=tuple)
 as_list_of_objects = as_seq_of(load_object, type_=list)
 
 
-def as_seq_of_seq(v, sep='\n', type_=list, item_sep=None, line_type=tuple):
-    """Convert ``v`` to a list of tuples.
+def as_seq_of_seq(sep='\n', type_=list, item_sep=None, line_type=tuple,
+                  item_converter=None):
+    """Make a converter that converts a str to a sequence of sequences.
+
+    Typically, this is used to convert lines containing items separated
+    by spaces (e.g., as might be found in an INI file).
+
+    If an ``item_converter`` is specified, each line item will be
+    converted accordingly.
 
     E.g.::
 
@@ -132,21 +139,39 @@ def as_seq_of_seq(v, sep='\n', type_=list, item_sep=None, line_type=tuple):
         ... 1 2 3
         ... a b c
         ... '''
-        >>> as_seq_of_seq(s)
+        >>> as_seq_of_seq()(s)
         [('1', '2', '3'), ('a', 'b', 'c')]
-        >>> as_seq_of_seq('')
+        >>> as_seq_of_seq()('')
         []
+        >>> as_seq_of_seq(sep=';', item_sep=',')('1, 2; 3, 4')
+        [('1', '2'), ('3', '4')]
+        >>> c = as_seq_of_seq(sep=';', item_sep=',', item_converter=int)
+        >>> c('1, 2; 3, 4')
+        [(1, 2), (3, 4)]
 
     """
-    if not v.strip():
-        return type_()
-    # split input string into lines
-    lines = as_tuple(v, sep)
-    # split each line into a sequence of items
-    lines = (as_tuple(line, item_sep) for line in lines)
-    # convert each of the sequences to the requested type
-    lines = type_(line_type(line) for line in lines)
-    return lines
+    if item_converter is not None:
+        item_converter = get_converter(item_converter)
+
+    def converter(v):
+        if not v.strip():
+            return type_()
+        # split input string into lines
+        lines = as_tuple(v, sep)
+        # split each line into a sequence of items
+        lines = (as_tuple(line, item_sep) for line in lines)
+        # convert line items
+        if item_converter is not None:
+            new_lines = []
+            for line in lines:
+                new_line = tuple(item_converter(i) for i in line)
+                new_lines.append(new_line)
+            lines = new_lines
+        # convert each of the sequences to the requested type
+        lines = type_(line_type(line) for line in lines)
+        return lines
+
+    return converter
 
 
 def as_first_of(a_converter, *converters):
@@ -201,7 +226,7 @@ def as_args(*converters, item_sep=', '):
 
     """
     def converter(v):
-        v = as_seq_of_seq(v, item_sep=item_sep)
+        v = as_seq_of_seq(item_sep=item_sep)(v)
         args_list = []
         for line in v:
             args = []
