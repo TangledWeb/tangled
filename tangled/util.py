@@ -1,5 +1,4 @@
 import binascii
-import doctest
 import hmac
 import importlib
 import inspect
