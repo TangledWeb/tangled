@@ -16,16 +16,39 @@ class ReleaseCommand(ACommand):
 
     @classmethod
     def configure(cls, parser):
-        parser.add_argument('-r', '--release-version')
-        parser.add_argument('-n', '--next-version')
-        parser.add_argument('-t', '--tag')
-        parser.add_argument('-c', '--change-log', default='CHANGELOG')
-        parser.add_argument('-y', '--yes', action='store_true', default=False)
-        parser.add_argument('--pre', action='store_true', default=False)
-        parser.add_argument('--create-tag', action='store_true', default=False)
-        parser.add_argument('--upload', action='store_true', default=False)
-        parser.add_argument('--post', action='store_true', default=False)
-        parser.add_argument('--full', action='store_true', default=False)
+        parser.add_argument(
+            '-r', '--release-version',
+            help='Version of this release; '
+                 'also used as tag name unless --tag is specified')
+        parser.add_argument(
+            '-n', '--next-version',
+            help='Anticipated version of next release '
+                 '(.dev0 will be appended)')
+        parser.add_argument(
+            '-t', '--tag',
+            help='Specify a tag name instead of using the release version')
+        parser.add_argument(
+            '-c', '--change-log', default='CHANGELOG',
+            help='Path to change log; defaults to ./CHANGELOG')
+        parser.add_argument(
+            '-y', '--yes', action='store_true', default=False,
+            help='Perform all actions without prompting')
+        parser.add_argument(
+            '--pre', action='store_true', default=False,
+            help='Update version and set release date')
+        parser.add_argument(
+            '--create-tag', action='store_true', default=False,
+            help='Create tag for this release')
+        parser.add_argument(
+            '--upload', action='store_true', default=False,
+            help='Create source distribution and upload to PyPI')
+        parser.add_argument(
+            '--post', action='store_true', default=False,
+            help='Set version to next and add change log section')
+        parser.add_argument(
+            '--full', action='store_true', default=False,
+            help='Perform all of the actions above in order '
+                 '(this is the default)')
 
     def run(self):
         self.args.full = (
