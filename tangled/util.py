@@ -220,7 +220,7 @@ def random_string(n=32, alphabet=None, encoding='ascii') -> str:
 
     By default, the string will contain 32 hex characters (representing
     16 random bytes). It's important to keep in mind that in this case
-    you're getting only ``1/ * n`` random bytes even though the output
+    you're getting only ``1/2 * n`` random bytes even though the output
     string contains ``n`` characters.
 
     If ``n`` is specified without an ``alphabet``, it must be a multiple
