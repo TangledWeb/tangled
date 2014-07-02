@@ -1,7 +1,7 @@
 0.1a8 (unreleased)
 ==================
 
-- No changes yet
+- Consolidated `cached_property` and `reify` decorators; removed `reify`.
 
 
 0.1a7 (2014-03-22)

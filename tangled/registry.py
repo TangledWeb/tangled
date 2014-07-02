@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from collections import MutableMapping, MutableSequence, OrderedDict
 
-from tangled.decorators import reify
+from tangled.decorators import cached_property
 
 
 class ARegistry(MutableMapping):
@@ -50,7 +50,7 @@ class Registry(ARegistry):
 
     """A component registry."""
 
-    @reify
+    @cached_property
     def _components(self):
         # key => {differentiator => component}
         return OrderedDict()
