@@ -1,5 +1,7 @@
 from setuptools import setup
 
+from tangled.setup import find_packages
+
 
 setup(
     name='tangled',
@@ -10,12 +12,7 @@ setup(
     download_url='https://github.com/TangledWeb/tangled/tags',
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
-    packages=[
-        'tangled',
-        'tangled.scripts',
-        'tangled.tests',
-        'tangled.tests.dummy_package',
-    ],
+    packages=find_packages(),
     extras_require={
         'dev': (
             'coverage>=3.7.1',
