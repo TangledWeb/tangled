@@ -5,6 +5,7 @@ import inspect
 import os
 import random
 import string
+from types import ModuleType
 
 
 random = random.SystemRandom()
@@ -22,10 +23,18 @@ NOT_SET = type('NOT_SET', (), {
 def fully_qualified_name(obj):
     """Get the fully qualified name for an object.
 
+    Returns the object's module name joined with its qualified name. If
+    the object is a module, its name is returned.
+
     >>> fully_qualified_name(object)
     'builtins.object'
+    >>> import tangled.util
+    >>> fully_qualified_name(tangled.util)
+    'tangled.util'
 
     """
+    if isinstance(obj, ModuleType):
+        return obj.__name__
     return '{}.{}'.format(obj.__module__, obj.__qualname__)
 
 
