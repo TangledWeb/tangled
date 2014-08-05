@@ -5,7 +5,7 @@ from tangled.setup import find_packages
 
 setup(
     name='tangled',
-    version='0.1a8',
+    version='0.1a9.dev0',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
     url='http://tangledframework.org/',
