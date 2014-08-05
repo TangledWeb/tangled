@@ -1,7 +1,17 @@
-0.1a8 (unreleased)
+0.1a8 (2014-08-04)
 ==================
 
 - Consolidated `cached_property` and `reify` decorators; removed `reify`.
+- Added a find_packages() function that is similar to setuptools'
+  find_packages(). This version does the "right thing" with regard to PEP 420
+  namespace packages--i.e., it treats *every* directory as a package. The
+  quotes around "right thing" indicate that it's debatable as to whether this
+  is correct in the general case.
+- util.fully_qualified_name() can now accept a module as an argument; before,
+  it would blow up if a module was passed in.
+- Implemented a "deferred decorator action" system that is similar to Venusian
+  but much simpler. Venusian uses all kinds of frame inspection/modification
+  hackery that is really hard to understand.
 
 
 0.1a7 (2014-03-22)
