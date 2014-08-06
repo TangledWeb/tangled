@@ -1,6 +1,4 @@
-from setuptools import setup
-
-from tangled.setup import find_packages
+from setuptools import setup, PEP420PackageFinder
 
 
 setup(
@@ -12,7 +10,7 @@ setup(
     download_url='https://github.com/TangledWeb/tangled/tags',
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
-    packages=find_packages(),
+    packages=PEP420PackageFinder.find(include=['tangled*']),
     extras_require={
         'dev': (
             'coverage>=3.7.1',
