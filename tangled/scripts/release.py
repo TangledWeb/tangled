@@ -1,5 +1,6 @@
 import datetime
 import re
+import sys
 from subprocess import check_call
 
 from tangled.abcs import ACommand
@@ -131,7 +132,15 @@ class ReleaseCommand(ACommand):
             upload_to_pypi = input('Create sdist and upload to PyPI? [y/N] ')
             upload_to_pypi = as_bool(upload_to_pypi or False)
         if upload_to_pypi:
-            check_call(['python', 'setup.py', 'sdist', 'register', 'upload'])
+            # This feels kinda hacky, but it ensures that setup() is run
+            # in the same environment the `tangled release` script was
+            # run in (versus using a subprocess and trying to set the
+            # executable correctly).
+            original_argv = sys.argv
+            sys.argv = [sys.executable, 'sdist', 'register', 'upload']
+            with open('setup.py') as fp:
+                exec(fp.read())
+            sys.argv = original_argv
 
     def post_release(self):
         if self.args.next_version:
