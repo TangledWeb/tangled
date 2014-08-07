@@ -1,4 +1,5 @@
 import datetime
+import os
 import pkg_resources
 
 ON_RTD = os.environ.get('READTHEDOCS') == 'True'
