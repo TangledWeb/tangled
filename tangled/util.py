@@ -134,6 +134,40 @@ def asset_path(path, *rel_path):
     return path
 
 
+def is_asset_path(path) -> bool:
+    """Is ``path`` an asset path?
+
+    If ``path`` is absolute, it will not be considered an asset path.
+    Otherwise, it will be considered an asset path if it contains a
+    colon *and* the package path contains only valid Python identifiers.
+
+    Examples::
+
+        >>> is_asset_path('/some/abs/path')
+        False
+        >>> is_asset_path('rel/path')
+        False
+        >>> is_asset_path('package')
+        False
+        >>> is_asset_path('package:')
+        True
+        >>> is_asset_path('package.subpackage:rel/path')
+        True
+        >>> is_asset_path('pack-age.subpackage:')
+        False
+        >>> is_asset_path('pack-age.subpackage:rel/path')
+        False
+        >>> is_asset_path('base.ini')
+        False
+
+    """
+    if os.path.isabs(path) or ':' not in path:
+        return False
+    pkg_path, fs_path = path.split(':', 1)
+    parts = pkg_path.split('.')
+    return all(p.isidentifier() for p in parts)
+
+
 def abs_path(path):
     """Get abs. path for ``path``.
 
@@ -143,7 +177,7 @@ def abs_path(path):
 
     """
     if not os.path.isabs(path):
-        if ':' in path:
+        if is_asset_path(path):
             path = asset_path(path)
         else:
             path = os.path.expanduser(path)
