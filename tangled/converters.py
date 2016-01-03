@@ -19,13 +19,17 @@ for b, strs in BOOL_STR_MAP.items():
 def get_converter(converter):
     """Given a ``converter`` name, return the actual converter.
 
-    If ``converter`` is not a string, it will be returned as is.
+    If ``converter`` is not a string, it will be returned as is, except
+    in the special case of ``None``, which will cause the identity
+    function to be returned.
 
     Otherwise, ``converter`` can be any builtin name (some of which are
     handled specially), the name of a converter in this module, or the
     name of a converter in this module without its ``as_`` prefix.
 
     """
+    if converter is None:
+        return as_self
     if not isinstance(converter, str):
         return converter
     converters = {k: v for k, v in globals().items() if k.startswith('as_')}
@@ -43,6 +47,10 @@ def get_converter(converter):
     else:
         raise TypeError('Unknown converter: {}'.format(converter))
     return converter
+
+
+def as_self(v):
+    return v
 
 
 def as_abs_path(v):
@@ -191,8 +199,8 @@ def as_first_of(a_converter, *converters):
 def as_args(*converters, item_sep=', '):
     r"""Make a converter that converts lines of args using ``converters``.
 
-    ``None`` can be passed to indicate that an arg doesn't require
-    conversion.
+    ``None`` or ``'self'`` can be passed to indicate that an arg doesn't
+    require conversion.
 
     This would typically be used to parse lines of args from a settings
     file::
@@ -206,7 +214,7 @@ def as_args(*converters, item_sep=', '):
     to::
 
         >>> lines = 'a, 1\nb, 2'
-        >>> my_converter = as_args(None, 'int')
+        >>> my_converter = as_args('self', 'int')
         >>> my_func = lambda x, y: (x, y)
         >>> for arg_spec in my_converter(lines):
         ...     my_func(*arg_spec['args'], **arg_spec['kwargs'])
