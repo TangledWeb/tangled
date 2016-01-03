@@ -66,7 +66,7 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
     return parsed_settings
 
 
-def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
+def parse_settings_file(path, section='app', interpolation=None, meta_settings=True, **kwargs):
     """Parse settings from the .ini file at ``path``.
 
     ``path`` can be a file system path or an asset path. ``section``
@@ -84,7 +84,9 @@ def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
     file_name = abs_path(path)
     file_dir = os.path.dirname(file_name)
     defaults = {'__dir__': file_dir}
-    parser = configparser.ConfigParser(defaults=defaults)
+    if interpolation is None:
+        interpolation = configparser.ExtendedInterpolation()
+    parser = configparser.ConfigParser(defaults=defaults, interpolation=interpolation)
 
     with open(file_name) as fp:
         parser.read_file(fp)
@@ -110,7 +112,7 @@ def parse_settings_file(path, section='app', meta_settings=True, **kwargs):
     if extends:
         base_file_name = abs_path(extends)
         base_settings = parse_settings_file(
-            base_file_name, section, meta_settings, **kwargs)
+            base_file_name, section, interpolation, meta_settings, **kwargs)
         if meta_settings:
             settings['__base__'] = base_file_name
             settings['__bases__'] = (base_file_name,)
