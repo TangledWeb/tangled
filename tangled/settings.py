@@ -3,7 +3,7 @@ import os
 import re
 
 from tangled import converters
-from tangled.util import abs_path, get_items_with_key_prefix
+from tangled.util import abs_path, get_items_with_key_prefix, is_asset_path
 
 
 CONVERTER_KEY_RE = re.compile(r'^\((?P<converter>[a-z_]+)\)(?P<k>.+)$')
@@ -110,6 +110,8 @@ def parse_settings_file(path, section='app', interpolation=None, meta_settings=T
 
     extends = settings.pop('extends', None)
     if extends:
+        if not is_asset_path(extends):
+            extends = os.path.join(file_dir, extends)
         base_file_name = abs_path(extends)
         base_settings = parse_settings_file(
             base_file_name, section, interpolation, meta_settings, **kwargs)
