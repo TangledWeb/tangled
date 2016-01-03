@@ -110,6 +110,8 @@ def asset_path(path, *rel_path):
 
         >>> asset_path('tangled.util')
         '.../tangled/tangled'
+        >>> asset_path('tangled.util:')
+        '.../tangled/tangled'
         >>> asset_path('tangled.util:x')
         '.../tangled/tangled/x'
         >>> asset_path('tangled.util', 'x')
