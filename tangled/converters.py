@@ -1,3 +1,4 @@
+import inspect
 from collections import OrderedDict
 from functools import partial
 
@@ -194,6 +195,91 @@ def as_first_of(a_converter, *converters):
                 pass
         raise TypeError('Could not convert {}'.format(v))
     return converter
+
+
+def as_func_args(func, converters={}, item_sep=', ', _skip_first=False):
+    r"""Make a converter that converts lines of args based on ``func``.
+
+    This inspects ``func`` and configures converters based on the types
+    of its args as follows:
+
+        - If an arg has no default, no converter will be used unless
+          a converter is specified for it via ``converters``
+        - If an arg has a default that's a built-in type, the
+          corresponding converter will be used unless a different
+          converter is specified via ``converters``
+        - If an arg has a default that's *not* a built-in type, that
+          type will be used as the converter unless a different
+          converter is specified via ``converters``
+
+    The resulting converter would typically be used to parse lines of
+    args from a settings file.
+
+    Examples::
+
+        >>> lines = ('1, 1, 1, 1\n1, 0, 1, 1')
+        >>> c = as_func_args((lambda a, b=True, i=1, s='s': None), converters={'a': int})
+        >>> args_list = c(lines)
+        >>> args = args_list[0]
+        >>> args['a']
+        1
+        >>> args['b']
+        True
+        >>> args['i']
+        1
+        >>> args['s']
+        '1'
+        >>> args = args_list[1]
+        >>> args['b']
+        False
+        >>> c = as_func_args(as_func_args, converters={'func': 'object'})
+        >>> args = c('tangled.converters:as_func_args')[0]
+        >>> args['func'].__name__
+        'as_func_args'
+
+    """
+    func = load_object(func)
+    signature = inspect.signature(func)
+    parameters = iter(signature.parameters.values())
+    if _skip_first:
+        next(parameters)
+
+    arg_converters = OrderedDict()
+    for i, p in enumerate(parameters):
+        name = p.name
+        if name in converters:
+            converter = converters[name]
+        elif name is None:
+            # Positional-only arg
+            name = (None, i)
+            converter = 'self'
+        elif p.default is p.empty:
+            converter = 'self'
+        elif p.default is None:
+            converter = 'self'
+        else:
+            c = p.default.__class__
+            is_builtin = c is __builtins__.get(c.__name__)
+            converter = c.__name__ if is_builtin else c
+        arg_converters[name] = get_converter(converter)
+
+    line_splitter = as_seq_of_seq(item_sep=item_sep)
+
+    def converter(lines):
+        lines = line_splitter(lines)
+        args_list = []
+        for line in lines:
+            args = OrderedDict()
+            for v, name in zip(line, arg_converters):
+                converter = arg_converters[name]
+                args[name] = converter(v)
+            args_list.append(args)
+        return args_list
+
+    return converter
+
+
+as_meth_args = partial(as_func_args, _skip_first=True)
 
 
 def as_args(*converters, item_sep=', '):
