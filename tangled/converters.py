@@ -233,26 +233,33 @@ def as_args(*converters, item_sep=', '):
         True
 
     """
-    def converter(v):
-        v = as_seq_of_seq(item_sep=item_sep)(v)
+    converters = [_normalize_converter(c) for c in converters]
+    line_splitter = as_seq_of_seq(item_sep=item_sep)
+
+    def converter(lines):
+        lines = line_splitter(lines)
         args_list = []
-        for line in v:
-            args = []
-            kwargs = OrderedDict()
+        for line in lines:
+            args, kwargs = [], OrderedDict()
             for arg_val, arg_converter in zip(line, converters):
-                arg_name = None
-                if isinstance(arg_converter, tuple):
-                    arg_name, arg_converter = arg_converter
-                if arg_converter is not None:
-                    arg_converter = get_converter(arg_converter)
-                    arg_val = arg_converter(arg_val)
+                arg_name, arg_converter = arg_converter
+                arg_val = arg_converter(arg_val)
                 if arg_name is None:
                     args.append(arg_val)
                 else:
                     kwargs[arg_name] = arg_val
             args_list.append({'args': args, 'kwargs': kwargs})
         return args_list
+
     return converter
+
+
+def _normalize_converter(converter):
+    if isinstance(converter, (list, tuple)):
+        name, converter = converter
+        return name, get_converter(converter)
+    else:
+        return None, get_converter(converter)
 
 
 # Map builtins to our converters
