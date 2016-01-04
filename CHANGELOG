@@ -1,8 +1,26 @@
-0.1a9 (unreleased)
+0.1a9 (2016-01-03)
 ==================
 
-- No changes yet
-
+- Remove custom `find_packages` function in favor of setuptools'
+  `PEP420PackageFinder`
+- Add `as_self` converter; use it as the default converter (i.e., return it
+  when `None` is passed to `get_converter`)
+- Add `as_func_args` and `as_meth_args` converters; these are similar to
+  `as_args` but automatically figure out which converters to use for a function
+  or method and return a single dict of all args (instead of positionals and
+  keyword args seperately)
+- Add `util.is_asset_path()` for more robust, centralized checking of whether
+  a string looks like an asset path
+- When loading settings from a file, add `__dir__` to the settings instead of
+  `__here__` as the former seems more obvious (i.e., the directory containing
+  the settings file)
+- When a settings file extends another settings file and the path to the
+  extended file is a relative path (i.e., when the `extends` setting is
+  relative, typically just a file name), assume that the path is relative to
+  `__dir__`; previously, CWD was used implicitly
+- Use extended (Buildout-style) interpolation by default when reading settings
+  files; the extended interpolation syntax is nicer to work with and more
+  flexible than basic interpolation
 
 0.1a8 (2014-08-04)
 ==================

@@ -3,7 +3,7 @@ from setuptools import setup, PEP420PackageFinder
 
 setup(
     name='tangled',
-    version='0.1a9.dev0',
+    version='0.1a9',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
     url='http://tangledframework.org/',
