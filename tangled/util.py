@@ -229,7 +229,9 @@ def get_items_with_key_prefix(items, prefix, strip_prefix=True, processors=()):
 
 
 ASCII_ALPHANUMERIC = string.ascii_letters + string.digits
+BASE64_ALPHABET = ASCII_ALPHANUMERIC + '-_'
 HEX = string.digits + 'abcdef'
+
 
 def random_bytes(n=16, as_hex=True):
     """Return a random string of bytes.
@@ -260,23 +262,11 @@ def random_bytes(n=16, as_hex=True):
         return _bytes
 
 
-def random_string(n=32, alphabet=None, encoding='ascii') -> str:
+def random_string(n=32, alphabet=BASE64_ALPHABET, encoding='ascii') -> str:
     """Return a random string with length ``n``.
 
-    By default, the string will contain 32 hex characters (representing
-    16 random bytes). It's important to keep in mind that in this case
-    you're getting only ``1/2 * n`` random bytes even though the output
-    string contains ``n`` characters.
-
-    If ``n`` is specified without an ``alphabet``, it must be a multiple
-    of 2.
-
-    If an ``alphabet`` is specified, ``n`` random characters will be
-    selected from that ``alphabet``.
-
-    .. note:: The alphabet length is currently constrained to <= 256
-              chars--if it's longer, the extra chars will never be
-              selected.
+    By default, the string will contain 32 characters from the URL-safe
+    base 64 alphabet.
 
     ``encoding`` is used only if the ``alphabet`` is a byte string.
 
@@ -294,16 +284,13 @@ def random_string(n=32, alphabet=None, encoding='ascii') -> str:
     True
 
     """
-    if alphabet:
-        chars = (random.choice(alphabet) for _ in range(n))
-        if isinstance(alphabet, str):
-            return ''.join(chars)
-        else:
-            return b''.join(chars).decode(encoding)
-    else:
-        if n % 2:
-            raise ValueError('{} is not a multiple of 2'.format(n))
-        return random_bytes(n // 2).decode('ascii')
+    a = alphabet[0]
+    chars = (random.choice(alphabet) for _ in range(n))
+    if isinstance(a, str):
+        return ''.join(chars)
+    elif isinstance(a, bytes):
+        return b''.join(chars).decode(encoding)
+    raise TypeError('Expected str or bytes; got %s' % a.__class__)
 
 
 def constant_time_compare(a, b):
