@@ -137,7 +137,7 @@ class ReleaseCommand(ACommand):
             # run in (versus using a subprocess and trying to set the
             # executable correctly).
             original_argv = sys.argv
-            sys.argv = [sys.executable, 'sdist', 'register', 'upload']
+            sys.argv = [sys.executable, 'sdist', 'upload']
             with open('setup.py') as fp:
                 exec(fp.read())
             sys.argv = original_argv
