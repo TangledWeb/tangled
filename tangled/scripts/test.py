@@ -28,7 +28,13 @@ class TestCommand(ACommand):
     def run(self):
         where = self.args.where
         if where is None:
-            dist = next(pkg_resources.find_distributions('.'), True)
+            where = os.path.normpath(os.path.abspath('.'))
+            dist = next(pkg_resources.find_distributions(where), None)
+            if dist is None:
+                message = (
+                    'No distribution found in {where}.\n'
+                    'You may need to run `pip install -e .` first.')
+                self.exit(message.format_map(locals()))
             where = os.path.join('.', *dist.project_name.split('.'))
 
         print('Running tests from {}'.format(where))
