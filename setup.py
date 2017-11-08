@@ -13,12 +13,11 @@ setup(
     packages=PEP420PackageFinder.find(include=['tangled*']),
     extras_require={
         'dev': (
-            'coverage>=3.7.1',
-            'nose>=1.3.3',
-            'pep8>=1.5.7',
-            'pyflakes>=0.8.1',
-            'Sphinx>=1.2.2',
-            'sphinx_rtd_theme>=0.1.6',
+            'coverage>=4.4.2',
+            'nose>=1.3.7',
+            'flake8>=3.5.0',
+            'Sphinx>=1.6.5',
+            'sphinx_rtd_theme>=0.2.4',
         )
     },
     entry_points="""
