@@ -213,6 +213,7 @@ def filter_items(items,
                 k, v = processor(k, v)
             yield k, v
 
+
 def get_items_with_key_prefix(items, prefix, strip_prefix=True, processors=()):
     """Filter ``items`` to those with a key that starts with ``prefix``.
 

@@ -91,9 +91,7 @@ class ReleaseCommand(ACommand):
         # Update change log
 
         change_log_pattern = (
-            r'\s*'
-            + release_version +
-            r'\s+'
+            r'\s*' + release_version + r'\s+'
             r'\((?P<release_date>(\d{4}-\d{2}-\d{2}|unreleased))\)'
             r'\s*')
 
@@ -214,5 +212,3 @@ class ReleaseCommand(ACommand):
             check_call(['git', 'commit', '-m', msg] + files)
         else:
             self.exit('Aborted')
-
-

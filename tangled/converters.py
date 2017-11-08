@@ -120,10 +120,12 @@ as_tuple = partial(as_seq, type_=tuple)
 def as_seq_of(item_converter, sep=None, type_=tuple, args=(), kwargs=None):
     """Create a sequence, converting each item with ``item_converter``."""
     item_converter = get_converter(item_converter)
+
     def converter(v):
         items = as_tuple(v, sep)
         return type_(
             item_converter(item, *args, **(kwargs or {})) for item in items)
+
     return converter
 
 
@@ -186,6 +188,7 @@ def as_seq_of_seq(sep='\n', type_=list, item_sep=None, line_type=tuple,
 def as_first_of(a_converter, *converters):
     """Try each converter in ``converters``."""
     converters = (a_converter,) + converters
+
     def converter(v):
         for c in converters:
             c = get_converter(c)
@@ -194,6 +197,7 @@ def as_first_of(a_converter, *converters):
             except ValueError:
                 pass
         raise TypeError('Could not convert {}'.format(v))
+
     return converter
 
 
