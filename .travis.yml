@@ -6,5 +6,5 @@ python:
 install:
   - pip install -e .[dev]
 script:
-  - nosetests
+  - python -m unittest discover tangled
   - sphinx-build -E docs docs/_build

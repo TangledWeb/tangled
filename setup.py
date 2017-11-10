@@ -14,7 +14,6 @@ setup(
     extras_require={
         'dev': (
             'coverage>=4.4.2',
-            'nose>=1.3.7',
             'flake8>=3.5.0',
             'Sphinx>=1.6.5',
             'sphinx_rtd_theme>=0.2.4',
