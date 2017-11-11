@@ -1,3 +1,5 @@
+import threading
+import time
 import unittest
 from doctest import DocTestSuite
 
@@ -142,3 +144,48 @@ class TestCachedPropertyWithDependencies(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: obj.dependent_on_regular)
         obj.regular = 2
         self.assertEqual(obj.dependent_on_regular, 2)
+
+
+class TestMultiThreading(unittest.TestCase):
+
+    def _get_target(self):
+        def target(start_event, value, iterations=100, sleep_time=0.01):
+            start_event.wait()
+            obj = ClassWithDependentProperties()
+            for _ in range(iterations):
+                self.assertEqual(obj.dependent, 'cached.xxx')
+                obj.cached = value
+                self.assertEqual(obj.dependent, value + '.xxx')
+                del obj.cached
+                self.assertEqual(obj.dependent, 'cached.xxx')
+                del obj.dependent
+                self.assertEqual(obj.dependent, 'cached.xxx')
+
+                time.sleep(sleep_time)
+
+                obj.regular = value
+                self.assertEqual(obj.dependent_on_regular, value)
+                del obj.dependent_on_regular
+                self.assertEqual(obj.dependent_on_regular, value)
+                obj.dependent_on_regular = 'dor.' + value
+                self.assertEqual(obj.dependent_on_regular, 'dor.' + value)
+                del obj.dependent_on_regular
+                self.assertEqual(obj.dependent_on_regular, value)
+                del obj.regular
+                self.assertRaises(AttributeError, lambda: obj.dependent_on_regular)
+
+                time.sleep(sleep_time)
+
+        return target
+
+    def test_multiple_threads(self):
+        start_event = threading.Event()
+        threads = [
+            threading.Thread(target=self._get_target(), args=(start_event, str(i)))
+            for i in range(100)
+        ]
+        for thread in threads:
+            thread.start()
+        start_event.set()
+        for thread in threads:
+            thread.join()

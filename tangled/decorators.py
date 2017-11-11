@@ -1,5 +1,6 @@
 import pkgutil
 import sys
+import threading
 
 from tangled.util import fully_qualified_name, load_object
 
@@ -75,6 +76,7 @@ class cached_property:
         else:
             dependencies = args
         self.dependencies = set(dependencies) if dependencies else None
+        self.lock = threading.Lock()
 
     def __call__(self, fget):
         self._set_fget(fget)
@@ -85,76 +87,82 @@ class cached_property:
             return self
         name, attrs = self.__name__, obj.__dict__
         if name not in attrs:
-            self._add_to_dependency_map(obj, name)
-            attrs[name] = self.fget(obj)
-            attrs[self._was_set_directly_name(obj, name)] = False
+            # Make other threads wait while the cached value is being
+            # computed due to attribute access. If some other thread is
+            # already computing the cached value, wait here until it's
+            # set.
+            with self.lock:
+                # This extra check is here in case a thread set the
+                # cached value while other threads were waiting.
+                if name not in attrs:
+                    self._add_to_dependency_map(obj, name)
+                    attrs[name] = self.fget(obj)
+                    attrs[self._was_set_directly_name(obj, name)] = False
         return attrs[name]
 
     def __set__(self, obj, value):
-        name, attrs = self.__name__, obj.__dict__
-        if name not in attrs:
-            self._add_to_dependency_map(obj, name)
-        attrs[name] = value
-        attrs[self._was_set_directly_name(obj, name)] = True
-        self._reset_dependents(obj)
+        self._update(obj, value)
 
     def __delete__(self, obj):
-        name, attrs = self.__name__, obj.__dict__
-        if name not in attrs:
-            self._add_to_dependency_map(obj, name)
-        else:
-            del attrs[name]
-            self._reset_dependents(obj)
-        attrs[self._was_set_directly_name(obj, name)] = False
+        self._update(obj)
 
     def _set_fget(self, fget):
         self.fget = fget
         self.__name__ = fget.__name__
         self.__doc__ = fget.__doc__
 
+    def _update(self, obj, *args):
+        name, attrs = self.__name__, obj.__dict__
+        with self.lock:
+            if name not in attrs:
+                self._add_to_dependency_map(obj, name)
+
+            if args:
+                attrs[name] = args[0]
+                was_set_directly = True
+            else:
+                if name in attrs:
+                    del attrs[name]
+                was_set_directly = False
+
+            attrs[self._was_set_directly_name(obj, name)] = was_set_directly
+            self._reset_dependents(obj)
+
+    def _was_set_directly_name(self, obj, name):
+        cls_name = self.__class__.__name__
+        obj_cls_name = obj.__class__.__name__
+        return '_%s__%s_%s_was_set_directly' % (obj_cls_name, name, cls_name)
+
     def _add_to_dependency_map(self, obj, name):
         if self.dependencies:
-            dependency_map = self.get_dependency_map(obj)
+            dependency_map = self._get_dependency_map(obj)
             dependency_map[name] = self.dependencies
 
-    def _reset_dependents(self, obj):
-        # When this property is set or deleted, find its dependent
-        # cached properties and delete them so that their values will be
-        # recomputed on next access. Properties that were set directly
-        # will be skipped.
-        self.reset_dependents_of(obj, self.__name__, regular=False)
+    def _dependency_map_name(self, obj):
+        cls_name = self.__class__.__name__
+        obj_cls_name = obj.__class__.__name__
+        return '_%s__%s_dependency_map' % (obj_cls_name, cls_name)
 
-    @classmethod
-    def get_dependency_map(cls, obj):
+    def _get_dependency_map(self, obj):
         obj_cls = obj.__class__
-        dependency_map_name = cls._dependency_map_name(obj)
+        dependency_map_name = self._dependency_map_name(obj)
         if not hasattr(obj_cls, dependency_map_name):
             setattr(obj_cls, dependency_map_name, {})
         dependency_map = getattr(obj_cls, dependency_map_name)
         return dependency_map
 
-    @classmethod
-    def reset_dependents_of(cls, obj, name, *, regular=True):
-        """Reset cached properties that depend on ``obj.name``.
+    def _reset_dependents(self, obj):
+        """Reset cached properties that depend on this property.
 
-        In the case where ``name`` refers to a regular attribute instead
-        of a cached property, this has to be called from an overridden
-        ``__setattr__`` or ``__delattr__`` in the class ``obj`` is an
-        instance of.
+        When this property is set or deleted, this finds its dependent
+        cached properties and deletes them so that their values will be
+        recomputed on next access. Properties that were set directly
+        will be skipped.
 
         """
-        # Skip resetting dependents if the named attribute is a cached
-        # property but regular attribute handling was requested. This is
-        # a hack for classes that override __setattr__ and __delattr__
-        # so they don't need to check if a cached property is being
-        # updated. The reason for all this is to avoid resetting
-        # dependents twice for cached properties.
-        if regular and isinstance(getattr(obj.__class__, name, None), cls):
-            return
-
-        attrs = obj.__dict__
-        dependency_map = cls.get_dependency_map(obj)
-        was_set_directly_name = cls._was_set_directly_name
+        name, attrs = self.__name__, obj.__dict__
+        dependency_map = self._get_dependency_map(obj)
+        was_set_directly_name = self._was_set_directly_name
 
         # For each cached property that has dependencies...
         for dependent, dependencies in dependency_map.items():
@@ -171,12 +179,30 @@ class cached_property:
                 delattr(obj, dependent)
 
     @classmethod
-    def _dependency_map_name(cls, obj):
-        return '_%s__%s_dependency_map' % (obj.__class__.__name__, cls.__name__)
+    def reset_dependents_of(cls, obj, name, *, _lock=threading.Lock(), _fake_props={}):
+        """Reset dependents of ``obj.name``.
 
-    @classmethod
-    def _was_set_directly_name(cls, obj, name):
-        return '_%s__%s_%s_was_set_directly' % (obj.__class__.__name__, name, cls.__name__)
+        This is intended for use in overridden ``__setattr__`` and
+        ``__delattr__`` methods for resetting cached properties that are
+        dependent on regular attributes.
+
+        """
+        if isinstance(getattr(obj.__class__, name, None), cls):
+            return
+
+        key = obj.__class__, name
+
+        # Ensure only one thread attempts to creates the fake property.
+        with _lock:
+            if key not in _fake_props:
+                fake_fget = lambda self: None
+                fake_fget.__name__ = name
+                _fake_props[key] = cls(fake_fget)
+
+        fake_prop = _fake_props[key]
+
+        with fake_prop.lock:
+            fake_prop._reset_dependents(obj)
 
 
 _ACTION_REGISTRY = {}
