@@ -79,10 +79,10 @@ class TestCachedPropertyWithDependencies(unittest.TestCase):
     def test_set(self):
         obj = ClassWithDependentProperties()
         self.assertEqual(obj.cached, 'cached')
-        # self.assertEqual(obj.dependent, 'cached.xxx')
-        # obj.dependent = 'XXX'
-        # self.assertEqual(obj.cached, 'cached')
-        # self.assertEqual(obj.dependent, 'XXX')
+        self.assertEqual(obj.dependent, 'cached.xxx')
+        obj.dependent = 'XXX'
+        self.assertEqual(obj.cached, 'cached')
+        self.assertEqual(obj.dependent, 'XXX')
 
     def test_del(self):
         obj = ClassWithDependentProperties()

@@ -67,7 +67,7 @@ class cached_property:
             dependencies = args[1:]
         else:
             dependencies = args
-        self.dependencies = set(dependencies)
+        self.dependencies = set(dependencies) if dependencies else None
 
     def __call__(self, fget):
         self._set_fget(fget)
@@ -78,19 +78,24 @@ class cached_property:
             return self
         name, attrs = self.__name__, obj.__dict__
         if name not in attrs:
+            self._add_to_dependency_map(obj, name)
             attrs[name] = self.fget(obj)
             attrs[self._was_set_directly_name(obj, name)] = False
         return attrs[name]
 
     def __set__(self, obj, value):
         name, attrs = self.__name__, obj.__dict__
+        if name not in attrs:
+            self._add_to_dependency_map(obj, name)
         attrs[name] = value
-        self._reset_dependents(obj)
         attrs[self._was_set_directly_name(obj, name)] = True
+        self._reset_dependents(obj)
 
     def __delete__(self, obj):
         name, attrs = self.__name__, obj.__dict__
-        if name in attrs:
+        if name not in attrs:
+            self._add_to_dependency_map(obj, name)
+        else:
             del attrs[name]
             self._reset_dependents(obj)
         attrs[self._was_set_directly_name(obj, name)] = False
@@ -100,12 +105,26 @@ class cached_property:
         self.__name__ = fget.__name__
         self.__doc__ = fget.__doc__
 
+    def _add_to_dependency_map(self, obj, name):
+        if self.dependencies:
+            dependency_map = self.get_dependency_map(obj)
+            dependency_map[name] = self.dependencies
+
     def _reset_dependents(self, obj):
         # When this property is set or deleted, find its dependent
         # cached properties and delete them so that their values will be
         # recomputed on next access. Properties that were set directly
         # will be skipped.
         self.reset_dependents_of(obj, self.__name__, regular=False)
+
+    @classmethod
+    def get_dependency_map(cls, obj):
+        obj_cls = obj.__class__
+        dependency_map_name = cls._dependency_map_name(obj)
+        if not hasattr(obj_cls, dependency_map_name):
+            setattr(obj_cls, dependency_map_name, {})
+        dependency_map = getattr(obj_cls, dependency_map_name)
+        return dependency_map
 
     @classmethod
     def reset_dependents_of(cls, obj, name, *, regular=True):
@@ -117,42 +136,40 @@ class cached_property:
         instance of.
 
         """
-        obj_cls = obj.__class__
-
         # Skip resetting dependents if the named attribute is a cached
         # property but regular attribute handling was requested. This is
         # a hack for classes that override __setattr__ and __delattr__
         # so they don't need to check if a cached property is being
         # updated. The reason for all this is to avoid resetting
         # dependents twice for cached properties.
-        if regular:
-            attr = getattr(obj_cls, name, None)
-            if isinstance(attr, cls):
-                return
+        if regular and isinstance(getattr(obj.__class__, name, None), cls):
+            return
 
         attrs = obj.__dict__
+        dependency_map = cls.get_dependency_map(obj)
         was_set_directly_name = cls._was_set_directly_name
 
-        for attr_name in dir(obj_cls):
-            if attr_name == name:
-                continue
-            attr = getattr(obj_cls, attr_name)
-            delete = (
-                # Is the attribute a cached property? If not, skip it.
-                isinstance(attr, cls) and
+        # For each cached property that has dependencies...
+        for dependent, dependencies in dependency_map.items():
+            reset = (
                 # Is the updated property one of its dependencies?
-                name in attr.dependencies and
+                name in dependencies and
                 # Is the attribute set on the instance?
-                attr_name in attrs and
-                # Was it set directly via `self.x = y`? If so, skip it.
-                not attrs.get(was_set_directly_name(obj, attr_name))
+                dependent in attrs and
+                # Was it set directly via `self.x = y`? If so, don't
+                # reset it.
+                not attrs.get(was_set_directly_name(obj, dependent))
             )
-            if delete:
-                delattr(obj, attr_name)
+            if reset:
+                delattr(obj, dependent)
+
+    @classmethod
+    def _dependency_map_name(cls, obj):
+        return '_%s__%s_dependency_map' % (obj.__class__.__name__, cls.__name__)
 
     @classmethod
     def _was_set_directly_name(cls, obj, name):
-        return '_%s__%s_was_set_directly' % (obj.__class__.__name__, name)
+        return '_%s__%s_%s_was_set_directly' % (obj.__class__.__name__, name, cls.__name__)
 
 
 _ACTION_REGISTRY = {}
