@@ -12,6 +12,13 @@ class cached_property:
     and cached in the instance's ``__dict__``. Subsequent accesses will
     retrieve the cached value from the instance's ``__dict__``.
 
+    .. note:: :meth:`__get__` will always be called to retrieve the
+        cached value since this is a so-called "data descriptor". This
+        *might* be a performance issue in some scenarios due to extra
+        lookups and method calls. To bypass the descriptor in cases
+        where this might be a concern, one option is to store the cached
+        value in a local variable.
+
     The property can be set and deleted as usual. When the property is
     deleted, its value will be recomputed and reset on the next access.
 
