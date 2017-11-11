@@ -16,10 +16,6 @@ class Class:
     def cached(self):
         return 'cached'
 
-    @cached_property('cached')
-    def dependent(self):
-        return self.cached + '.xxx'
-
 
 class TestCachedProperty(unittest.TestCase):
 
