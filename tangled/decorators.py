@@ -105,9 +105,34 @@ class cached_property:
         # cached properties and delete them so that their values will be
         # recomputed on next access. Properties that were set directly
         # will be skipped.
-        cls = self.__class__
-        obj_cls, name, attrs = obj.__class__, self.__name__, obj.__dict__
-        was_set_directly_name = self._was_set_directly_name
+        self.reset_dependents_of(obj, self.__name__, regular=False)
+
+    @classmethod
+    def reset_dependents_of(cls, obj, name, *, regular=True):
+        """Reset cached properties that depend on ``obj.name``.
+
+        In the case where ``name`` refers to a regular attribute instead
+        of a cached property, this has to be called from an overridden
+        ``__setattr__`` or ``__delattr__`` in the class ``obj`` is an
+        instance of.
+
+        """
+        obj_cls = obj.__class__
+
+        # Skip resetting dependents if the named attribute is a cached
+        # property but regular attribute handling was requested. This is
+        # a hack for classes that override __setattr__ and __delattr__
+        # so they don't need to check if a cached property is being
+        # updated. The reason for all this is to avoid resetting
+        # dependents twice for cached properties.
+        if regular:
+            attr = getattr(obj_cls, name, None)
+            if isinstance(attr, cls):
+                return
+
+        attrs = obj.__dict__
+        was_set_directly_name = cls._was_set_directly_name
+
         for attr_name in dir(obj_cls):
             if attr_name == name:
                 continue
@@ -125,7 +150,8 @@ class cached_property:
             if delete:
                 delattr(obj, attr_name)
 
-    def _was_set_directly_name(self, obj, name):
+    @classmethod
+    def _was_set_directly_name(cls, obj, name):
         return '_%s__%s_was_set_directly' % (obj.__class__.__name__, name)
 
 
