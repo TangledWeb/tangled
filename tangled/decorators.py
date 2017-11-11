@@ -76,52 +76,57 @@ class cached_property:
     def __get__(self, obj, cls=None):
         if obj is None:  # property accessed via class
             return self
-        if self.__name__ not in obj.__dict__:
-            obj.__dict__[self.__name__] = self.fget(obj)
-            obj.__dict__[self.set_directly_name] = False
-        return obj.__dict__[self.__name__]
+        name, attrs = self.__name__, obj.__dict__
+        if name not in attrs:
+            attrs[name] = self.fget(obj)
+            attrs[self._was_set_directly_name(obj, name)] = False
+        return attrs[name]
 
     def __set__(self, obj, value):
-        obj.__dict__[self.__name__] = value
-        self._del_dependents(obj)
-        obj.__dict__[self.set_directly_name] = True
+        name, attrs = self.__name__, obj.__dict__
+        attrs[name] = value
+        self._reset_dependents(obj)
+        attrs[self._was_set_directly_name(obj, name)] = True
 
     def __delete__(self, obj):
-        if self.__name__ in obj.__dict__:
-            del obj.__dict__[self.__name__]
-            self._del_dependents(obj)
-        obj.__dict__[self.set_directly_name] = False
+        name, attrs = self.__name__, obj.__dict__
+        if name in attrs:
+            del attrs[name]
+            self._reset_dependents(obj)
+        attrs[self._was_set_directly_name(obj, name)] = False
 
     def _set_fget(self, fget):
         self.fget = fget
-        self.set_directly_name = self._set_directly_name(fget.__name__)
         self.__name__ = fget.__name__
         self.__doc__ = fget.__doc__
 
-    def _set_directly_name(self, name):
-        return '__%s_set_directly__' % name
-
-    def _del_dependents(self, obj):
+    def _reset_dependents(self, obj):
         # When this property is set or deleted, find its dependent
         # cached properties and delete them so that their values will be
         # recomputed on next access. Properties that were set directly
         # will be skipped.
-        for name in dir(obj.__class__):
-            if name == self.__name__:
+        cls = self.__class__
+        obj_cls, name, attrs = obj.__class__, self.__name__, obj.__dict__
+        was_set_directly_name = self._was_set_directly_name
+        for attr_name in dir(obj_cls):
+            if attr_name == name:
                 continue
-            attr = getattr(obj.__class__, name)
+            attr = getattr(obj_cls, attr_name)
             delete = (
                 # Is the attribute a cached property? If not, skip it.
-                isinstance(attr, self.__class__) and
+                isinstance(attr, cls) and
                 # Is the updated property one of its dependencies?
-                self.__name__ in attr.dependencies and
+                name in attr.dependencies and
                 # Is the attribute set on the instance?
-                name in obj.__dict__ and
+                attr_name in attrs and
                 # Was it set directly via `self.x = y`? If so, skip it.
-                not obj.__dict__.get(self._set_directly_name(name))
+                not attrs.get(was_set_directly_name(obj, attr_name))
             )
             if delete:
-                delattr(obj, name)
+                delattr(obj, attr_name)
+
+    def _was_set_directly_name(self, obj, name):
+        return '_%s__%s_was_set_directly' % (obj.__class__.__name__, name)
 
 
 _ACTION_REGISTRY = {}
