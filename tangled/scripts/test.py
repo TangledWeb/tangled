@@ -34,7 +34,8 @@ class TestCommand(ACommand):
                 message = (
                     'No distribution found in {where}.\n'
                     'You may need to run `pip install -e .` first.')
-                self.exit(message.format_map(locals()))
+                self.print_error(message.format_map(locals()))
+                return 1
             where = os.path.join('.', *dist.project_name.split('.'))
 
         print('Running tests from {}'.format(where))

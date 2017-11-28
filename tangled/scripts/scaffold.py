@@ -57,11 +57,13 @@ class ScaffoldCommand(ACommand):
                 print('Overwriting {}'.format(output_dir))
                 shutil.rmtree(output_dir)
             else:
-                self.exit(
-                    '{} exists; use --overwrite to replace'
-                    .format(output_dir))
+                self.print_error('{} exists; use --overwrite to replace'.format(output_dir))
+                return 1
 
         scaffold_dir = self._get_scaffold_dir(args.scaffold)
+        if scaffold_dir is None:
+            self.print_error('Unknown scaffold: {}'.format(args.scaffold))
+            return 1
 
         print('Using {0.scaffold} scaffold'.format(args))
         print('Creating package at {}'.format(output_dir))
@@ -134,5 +136,5 @@ class ScaffoldCommand(ACommand):
                     path = entry_point.attrs[0]
                     return asset_path(module_name, path)
             else:
-                self.exit('Unknown scaffold: {}'.format(scaffold_name))
+                return None
         return asset_path(scaffold_name)

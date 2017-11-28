@@ -42,11 +42,12 @@ def main(argv=None):
     if hasattr(args, 'command_name'):
         command_type = process_registry.get(ACommand, args.command_name)
         command = command_type(parser, args)
-        command.run()
+        return command.run()
     else:
         parser.print_help()
-        sys.exit(-1)
+        return -1
 
 
 if __name__ == '__main__':
-    main()
+    return_code = main()
+    sys.exit(return_code)

@@ -66,15 +66,17 @@ class ReleaseCommand(ACommand):
 
         try:
             if self.args.pre:
-                self.pre_release()
+                if not self.pre_release():
+                    return 1
             if self.args.create_tag:
                 self.create_tag()
             if self.args.upload:
                 self.upload()
             if self.args.post:
-                self.post_release()
+                if not self.post_release():
+                    return 1
         except KeyboardInterrupt:
-            self.exit('\nAborted')
+            pass
 
     @cached_property
     def release_version(self):
@@ -112,7 +114,7 @@ class ReleaseCommand(ACommand):
 
         self.update_file('setup.py', setup_version_pattern, setup_on_match)
 
-        self.commit_or_abort(
+        return self.commit(
             'Prepare release {}'.format(release_version),
             [self.args.change_log, 'setup.py'])
 
@@ -173,7 +175,7 @@ class ReleaseCommand(ACommand):
 
         self.update_file('setup.py', setup_version_pattern, setup_on_match)
 
-        self.commit_or_abort(
+        return self.commit(
             'Back to development: {}'.format(next_version),
             [self.args.change_log, 'setup.py'])
 
@@ -199,7 +201,7 @@ class ReleaseCommand(ACommand):
         with open(file_name, 'w') as fp:
             fp.write(''.join(lines))
 
-    def commit_or_abort(self, msg, files):
+    def commit(self, msg, files):
         check_call(['git', 'diff'] + files)
         if self.args.yes:
             commit = True
@@ -210,5 +212,5 @@ class ReleaseCommand(ACommand):
             if not self.args.yes:
                 msg = input('Commit message ["{}"] '.format(msg)) or msg
             check_call(['git', 'commit', '-m', msg] + files)
-        else:
-            self.exit('Aborted')
+            return True
+        return False
