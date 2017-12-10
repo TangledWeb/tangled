@@ -1,7 +1,13 @@
-1.0a10 (unreleased)
+1.0a10 (2017-12-09)
 ===================
 
-- No changes yet
+- Added abilitiy for properties created via the `cached_property` decorator to
+  specify their dependencies.
+- Made `cached_property` thread safe (or at least made an initial attempt at
+  that). Inspired by by https://github.com/pydanny/cached-property.
+- Made `util.random_string()` use the Base 64 alphabet by default instead of
+  grabbing 16 bytes via `os.urandom()` and encoding them as a 32-byte hex
+  string.
 
 
 0.1a9 (2016-01-03)
