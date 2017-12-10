@@ -1,7 +1,7 @@
-1.0a11 (unreleased)
+1.0a11 (2017-12-09)
 ===================
 
-- No changes yet
+Release of 1.0a10 to PyPI was borked. This fixes that.
 
 
 1.0a10 (2017-12-09)
