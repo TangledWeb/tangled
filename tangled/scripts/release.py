@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 import sys
 from subprocess import check_call
@@ -29,8 +30,9 @@ class ReleaseCommand(ACommand):
             '-t', '--tag',
             help='Specify a tag name instead of using the release version')
         parser.add_argument(
-            '-c', '--change-log', default='CHANGELOG',
-            help='Path to change log; defaults to ./CHANGELOG')
+            '-c', '--change-log', default=None,
+            help='Path to change log; '
+                 'defaults to looking for CHANGELOG, CHANGELOG.md, or CHANGELOG.rst')
         parser.add_argument(
             '-y', '--yes', action='store_true', default=False,
             help='Perform all actions without prompting')
@@ -79,6 +81,17 @@ class ReleaseCommand(ACommand):
             pass
 
     @cached_property
+    def change_log(self):
+        change_log = self.args.change_log
+        if change_log:
+            return change_log
+        candidates = 'CHANGELOG', 'CHANGELOG.md', 'CHANGELOG.rst'
+        for candidate in candidates:
+            if os.path.isfile(candidate):
+                return candidate
+        raise ValueError('Change log not specified and not discoverable')
+
+    @cached_property
     def release_version(self):
         if self.args.release_version:
             release_version = self.args.release_version
@@ -101,7 +114,7 @@ class ReleaseCommand(ACommand):
             lines.append('{} ({})\n'.format(release_version, today))
 
         self.update_file(
-            self.args.change_log, change_log_pattern, change_log_on_match)
+            self.change_log, change_log_pattern, change_log_on_match)
 
         # Update setup.py
 
@@ -116,7 +129,7 @@ class ReleaseCommand(ACommand):
 
         return self.commit(
             'Prepare release {}'.format(release_version),
-            [self.args.change_log, 'setup.py'])
+            [self.change_log, 'setup.py'])
 
     def create_tag(self):
         tag = self.args.tag if self.args.tag else self.release_version
@@ -149,10 +162,10 @@ class ReleaseCommand(ACommand):
             next_version = input(
                 'Version for new release (.dev0 will be appended): ')
 
-        with open(self.args.change_log) as fp:
+        with open(self.change_log) as fp:
             content = fp.read()
 
-        with open(self.args.change_log, 'w') as fp:
+        with open(self.change_log, 'w') as fp:
             header = '{} (unreleased)'.format(next_version)
             separator = '=' * len(header)
             fp.writelines([
@@ -177,7 +190,7 @@ class ReleaseCommand(ACommand):
 
         return self.commit(
             'Back to development: {}'.format(next_version),
-            [self.args.change_log, 'setup.py'])
+            [self.change_log, 'setup.py'])
 
     def update_file(self, file_name, pattern, on_match, on_not_found=None):
         """Update line in file matching pattern."""
