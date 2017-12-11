@@ -9,23 +9,6 @@ from tangled.abcs import ACommand
 from tangled.util import asset_path
 
 
-BUILDOUT_TEMPLATE = """\
-[buildout]
-parts = dev
-newest = false
-develop = .
-          ../tangled
-          ../tangled.web
-
-[dev]
-recipe = zc.recipe.egg
-eggs = ${package_name}
-dependent-scripts = true
-interpreter = python
-
-"""
-
-
 class ScaffoldCommand(ACommand):
 
     @classmethod
@@ -34,7 +17,6 @@ class ScaffoldCommand(ACommand):
         parser.add_argument('package_name')
         parser.add_argument('-d', '--output-dir', default=None)
         parser.add_argument('--overwrite', action='store_true', default=False)
-        parser.add_argument('--buildout', action='store_true', default=False)
         parser.add_argument('--dry-run', action='store_true', default=False)
         parser.add_argument('--author', default=os.environ.get('USER', ''))
 
@@ -94,10 +76,6 @@ class ScaffoldCommand(ACommand):
         shutil.rmtree(package_dir)
         # Copy the scaffold's __package__ directory to where the leaf was
         shutil.move(scaffold_package_dir, package_dir)
-
-        if args.buildout:
-            with open(os.path.join(output_dir, 'buildout.cfg'), 'w') as fp:
-                fp.write(BUILDOUT_TEMPLATE)
 
         for current_dir, sub_dirs, files in os.walk(output_dir):
             for d in sub_dirs:
