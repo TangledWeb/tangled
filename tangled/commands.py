@@ -36,8 +36,12 @@ def virtualenv(config, overwrite=False):
 
 
 @command
-def install(config):
-    local(config, 'pip install -r requirements.txt')
+def install(config, upgrade=False):
+    local(config, (
+        'pip install',
+        '--upgrade' if upgrade else '',
+        '-r requirements.txt',
+    ))
     site_packages = '.env/lib/python{python.version}/site-packages'.format_map(config)
     site.addsitedir(site_packages)
 
