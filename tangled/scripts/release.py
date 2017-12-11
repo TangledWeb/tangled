@@ -43,9 +43,6 @@ class ReleaseCommand(ACommand):
             '--create-tag', action='store_true', default=False,
             help='Create tag for this release')
         parser.add_argument(
-            '--upload', action='store_true', default=False,
-            help='Create source distribution and upload to PyPI')
-        parser.add_argument(
             '--post', action='store_true', default=False,
             help='Set version to next and add change log section')
         parser.add_argument(
@@ -56,14 +53,11 @@ class ReleaseCommand(ACommand):
     def run(self):
         self.args.full = (
             self.args.full or
-            not any((
-                self.args.pre, self.args.create_tag, self.args.upload,
-                self.args.post)))
+            not any((self.args.pre, self.args.create_tag, self.args.post)))
 
         if self.args.full:
             self.args.pre = True
             self.args.create_tag = True
-            self.args.upload = True
             self.args.post = True
 
         try:
@@ -72,8 +66,6 @@ class ReleaseCommand(ACommand):
                     return 1
             if self.args.create_tag:
                 self.create_tag()
-            if self.args.upload:
-                self.upload()
             if self.args.post:
                 if not self.post_release():
                     return 1
@@ -137,23 +129,6 @@ class ReleaseCommand(ACommand):
             'git', 'tag', '-a', tag, '-m',
             'Release version {}'.format(tag)])
         check_call(['git', 'log', '-p', '-1', tag])
-
-    def upload(self):
-        if self.args.yes:
-            upload_to_pypi = True
-        else:
-            upload_to_pypi = input('Create sdist and upload to PyPI? [y/N] ')
-            upload_to_pypi = as_bool(upload_to_pypi or False)
-        if upload_to_pypi:
-            # This feels kinda hacky, but it ensures that setup() is run
-            # in the same environment the `tangled release` script was
-            # run in (versus using a subprocess and trying to set the
-            # executable correctly).
-            original_argv = sys.argv
-            sys.argv = [sys.executable, 'sdist', 'upload']
-            with open('setup.py') as fp:
-                exec(fp.read())
-            sys.argv = original_argv
 
     def post_release(self):
         if self.args.next_version:
