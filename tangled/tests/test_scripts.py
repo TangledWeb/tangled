@@ -7,8 +7,3 @@ from tangled import scripts
 class TestMain(unittest.TestCase):
 
     pass
-
-
-class TestTestCommand(unittest.TestCase):
-
-    pass

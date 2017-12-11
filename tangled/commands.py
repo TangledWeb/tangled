@@ -3,6 +3,7 @@ import os
 import posixpath
 import shutil
 import site
+import unittest
 
 from runcommands import command
 from runcommands.commands import local, show_config
@@ -39,6 +40,31 @@ def install(config):
     local(config, 'pip install -r requirements.txt')
     site_packages = '.env/lib/python{python.version}/site-packages'.format_map(config)
     site.addsitedir(site_packages)
+
+
+@command
+def test(config, coverage=True, tests=(), verbose=False):
+    where = os.path.join(config.cwd, config.package.replace('.', os.sep))
+    coverage = coverage and not tests
+    verbosity = 2 if verbose else 1
+
+    if coverage:
+        from coverage import Coverage
+        cover = Coverage(branch=True, source=[where])
+        cover.start()
+
+    loader = unittest.TestLoader()
+    if tests:
+        suite = loader.loadTestsFromNames(tests)
+    else:
+        suite = loader.discover(where)
+
+    runner = unittest.TextTestRunner(verbosity=verbosity)
+    runner.run(suite)
+
+    if coverage:
+        cover.stop()
+        cover.report()
 
 
 @command
