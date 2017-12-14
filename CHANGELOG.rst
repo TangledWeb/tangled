@@ -1,7 +1,13 @@
-1.0a12 (unreleased)
+1.0a12 (2017-12-13)
 ===================
 
-- No changes yet
+- Replaced `tangled test` script with RunCommands equivalent.
+- Added `--upgrade` flag to `install` command.
+- Removed `--upload` option from `tangled release` script; I'm not sure why,
+  but this was creating borked distributions.
+- Reimplemented all make targets as RunCommands commands; only `init` remains
+  as a wrapper around `run init`.
+- Removed remaining vestiges of Buildout :(
 
 
 1.0a11 (2017-12-09)
