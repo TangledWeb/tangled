@@ -47,7 +47,7 @@ def install(config, upgrade=False):
 
 
 @command
-def test(config, coverage=True, tests=(), verbose=False):
+def test(config, coverage=True, tests=(), verbose=False, fail_fast=False):
     where = os.path.join(config.cwd, config.package.replace('.', os.sep))
     coverage = coverage and not tests
     verbosity = 2 if verbose else 1
@@ -63,7 +63,7 @@ def test(config, coverage=True, tests=(), verbose=False):
     else:
         suite = loader.discover(where)
 
-    runner = unittest.TextTestRunner(verbosity=verbosity)
+    runner = unittest.TextTestRunner(verbosity=verbosity, failfast=fail_fast)
     runner.run(suite)
 
     if coverage:
