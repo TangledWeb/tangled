@@ -11,6 +11,9 @@ setup(
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
     packages=PEP420PackageFinder.find(include=['tangled*']),
+    install_requires=[
+        'runcommands>=1.0a27',
+    ],
     extras_require={
         'dev': [
             'coverage>=4.4.2',
