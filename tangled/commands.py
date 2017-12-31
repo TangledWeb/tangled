@@ -6,7 +6,7 @@ import site
 import unittest
 
 from runcommands import command
-from runcommands.commands import local, show_config
+from runcommands.commands import local, remote, show_config
 from runcommands.util import confirm
 from runcommands.util import get_all_list
 
@@ -127,6 +127,11 @@ def upload_docs(config):
         '-rltvz --delete',
         source, url,
     ))
+
+    remote(config, (
+        'chgrp -R www-data', config.docs.upload_path,
+        '&& chmod -R u=rwX,g=rX,o=', config.docs.upload_path,
+    ), host=config.domain_name,  run_as=None, sudo=True)
 
 
 __all__ = get_all_list(vars())
