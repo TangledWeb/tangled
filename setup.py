@@ -6,18 +6,18 @@ setup(
     version='1.0a13.dev0',
     description='Tangled namespace and utilities',
     long_description=open('README.rst').read(),
-    url='http://tangledframework.org/',
+    url='https://tangledframework.org/',
     download_url='https://github.com/TangledWeb/tangled/tags',
     author='Wyatt Baldwin',
     author_email='self@wyattbaldwin.com',
     packages=PEP420PackageFinder.find(include=['tangled*']),
     extras_require={
-        'dev': (
+        'dev': [
             'coverage>=4.4.2',
             'flake8>=3.5.0',
             'Sphinx>=1.6.5',
             'sphinx_rtd_theme>=0.2.4',
-        )
+        ],
     },
     entry_points="""
     [console_scripts]
