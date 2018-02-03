@@ -1,13 +1,17 @@
+import code
 import glob
 import os
 import posixpath
 import shutil
 import site
+import sys
 import unittest
 
 from runcommands import command
 from runcommands.commands import local, remote, show_config
-from runcommands.util import confirm
+from runcommands.util import confirm, printer
+
+from tangled.util import load_object
 
 
 @command
@@ -133,3 +137,46 @@ def upload_docs(config):
     ), host=config.domain_name,  run_as=None, sudo=True)
 
 
+@command
+def shell(config,
+          shell_: dict(choices=('bpython', 'ipython', 'python')) = 'bpython',
+          locals_: 'Pass shell locals using name=package.module:object syntax' = {}):
+    banner = ['Tangled Shell']
+
+    if locals_:
+        banner.append('Locals:')
+
+        for k, v in locals_.items():
+            v = load_object(v)
+            locals_[k] = v
+
+            v = str(v)
+            v = v.replace('\n', '\n       ' + ' ' * len(k))
+            banner.append('    {} = {}'.format(k, v))
+
+    banner = '\n'.join(banner)
+
+    if shell_ == 'bpython':
+        try:
+            import bpython
+        except ImportError:
+            printer.warning('bpython is not installed; falling back to python')
+            shell_ = 'python'
+        else:
+            from bpython import embed
+            banner = 'bpython {}\n{}'.format(bpython.__version__, banner)
+            embed(locals_=locals_, banner=banner)
+
+    if shell_ == 'ipython':
+        try:
+            import IPython
+        except ImportError:
+            printer.warning('IPython is not installed; falling back to python')
+            shell_ = 'python'
+        else:
+            from IPython.terminal.embed import InteractiveShellEmbed
+            InteractiveShellEmbed(user_ns=locals_, banner2=banner)()
+
+    if shell_ == 'python':
+        banner = 'python {}\n{}'.format(sys.version, banner)
+        code.interact(banner=banner, local=locals_)
