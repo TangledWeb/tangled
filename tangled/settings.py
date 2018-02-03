@@ -2,7 +2,7 @@ import configparser
 import os
 import re
 
-from tangled import converters
+from tangled.converters import get_converter
 from tangled.util import abs_path, get_items_with_key_prefix, is_asset_path
 
 
@@ -41,6 +41,8 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
     The original ``settings`` dict will not be changed.
 
     """
+    fallback_converter = conversion_map.get('*')
+    fallback_converter = get_converter(fallback_converter) if fallback_converter else None
     parsed_settings = {}
     if prefix is not None:
         settings = get_items_with_key_prefix(settings, prefix, strip_prefix)
@@ -52,14 +54,13 @@ def parse_settings(settings, conversion_map={}, defaults={}, required=(),
             if match:
                 k = match.group('k')
                 converter = match.group('converter')
-                converter = converters.get_converter(converter)
+                converter = get_converter(converter)
             elif k in conversion_map:
-                converter = converters.get_converter(conversion_map[k])
-            elif '*' in conversion_map:
-                converter = converters.get_converter(conversion_map['*'])
+                converter = get_converter(conversion_map[k])
             else:
-                converter = lambda v: v
-            v = converter(v)
+                converter = fallback_converter
+            if converter is not None:
+                v = converter(v)
         parsed_settings[k] = v
     if required:
         check_required(parsed_settings, required)
