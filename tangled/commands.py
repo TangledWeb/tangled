@@ -52,6 +52,8 @@ def install(config, upgrade=False):
 @command
 def test(config, coverage=True, tests=(), verbose=False, fail_fast=False):
     where = os.path.join(config.cwd, config.package.replace('.', os.sep))
+    top_level_dir = None if config.package == 'tangled' else config.cwd
+
     coverage = coverage and not tests
     verbosity = 2 if verbose else 1
 
@@ -64,7 +66,7 @@ def test(config, coverage=True, tests=(), verbose=False, fail_fast=False):
     if tests:
         suite = loader.loadTestsFromNames(tests)
     else:
-        suite = loader.discover(where, top_level_dir=config.cwd)
+        suite = loader.discover(where, top_level_dir=top_level_dir)
 
     runner = unittest.TextTestRunner(verbosity=verbosity, failfast=fail_fast)
     runner.run(suite)
