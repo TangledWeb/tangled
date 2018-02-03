@@ -8,7 +8,6 @@ import unittest
 from runcommands import command
 from runcommands.commands import local, remote, show_config
 from runcommands.util import confirm
-from runcommands.util import get_all_list
 
 
 @command
@@ -134,5 +133,3 @@ def upload_docs(config):
     ), host=config.domain_name,  run_as=None, sudo=True)
 
 
-__all__ = get_all_list(vars())
-__all__.append('show_config')
