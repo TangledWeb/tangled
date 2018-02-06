@@ -80,12 +80,14 @@ def load_object(obj, obj_name=None, package=None, level=2):
 
     """
     if isinstance(obj, str):
-        if ':' in obj:
+        if is_object_path(obj):
             module_name, obj_name = obj.split(':')
             if not module_name:
                 module_name = '.'
-        else:
+        elif is_module_path(obj):
             module_name = obj
+        else:
+            raise ValueError('Path is not an object or module path: %s' % obj)
         if module_name.startswith('.') and package is None:
             package = caller_package(level)
         obj = importlib.import_module(module_name, package)
