@@ -118,6 +118,34 @@ def is_module_path(path) -> bool:
     return all(p.isidentifier() for p in path.lstrip('.').split('.'))
 
 
+def is_object_path(path) -> bool:
+    """Is ``path`` an object path like ``package.module:obj.path``?
+
+    Examples::
+
+        >>> is_object_path('package.module:obj')
+        True
+        >>> is_object_path('.module:obj')
+        True
+        >>> is_object_path('package')
+        False
+        >>> is_object_path('package:')
+        False
+        >>> is_object_path('a/b')
+        False
+        >>> is_object_path('/a/b')
+        False
+
+    """
+    if ':' not in path:
+        return False
+    pkg_path, *object_path = path.split(':', 1)
+    if object_path:
+        object_path = object_path[0]
+        return is_module_path(pkg_path) and is_module_path(object_path)
+    return False
+
+
 def asset_path(path, *rel_path):
     """Get absolute path to asset in package.
 
