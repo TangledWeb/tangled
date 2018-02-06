@@ -96,6 +96,41 @@ def load_object(obj, obj_name=None, package=None, level=2):
     return obj
 
 
+def is_asset_path(path) -> bool:
+    """Is ``path`` an asset path like ``package.module:path``?
+
+    If ``path`` is absolute, it will not be considered an asset path.
+    Otherwise, it will be considered an asset path if it contains a
+    colon *and* the module path contains only valid Python identifiers.
+    The file system path to the right of the colon can be empty or any
+    string (it's ignored here).
+
+    Examples::
+
+        >>> is_asset_path('/some/abs/path')
+        False
+        >>> is_asset_path('rel/path')
+        False
+        >>> is_asset_path('package')
+        False
+        >>> is_asset_path('package:')
+        True
+        >>> is_asset_path('package.subpackage:rel/path')
+        True
+        >>> is_asset_path('package.subpackage:')
+        True
+        >>> is_asset_path('package.subpackage:rel/path')
+        True
+        >>> is_asset_path('base.ini')
+        False
+
+    """
+    if os.path.isabs(path) or ':' not in path:
+        return False
+    module_path, _ = path.split(':', 1)
+    return is_module_path(module_path)
+
+
 def is_module_path(path) -> bool:
     """Is ``path`` a module path like ``package.module``?
 
@@ -182,40 +217,6 @@ def asset_path(path, *rel_path):
     path = os.path.join(package_path, *rel_path)
     path = os.path.normpath(os.path.abspath(path))
     return path
-
-
-def is_asset_path(path) -> bool:
-    """Is ``path`` an asset path?
-
-    If ``path`` is absolute, it will not be considered an asset path.
-    Otherwise, it will be considered an asset path if it contains a
-    colon *and* the package path contains only valid Python identifiers.
-
-    Examples::
-
-        >>> is_asset_path('/some/abs/path')
-        False
-        >>> is_asset_path('rel/path')
-        False
-        >>> is_asset_path('package')
-        False
-        >>> is_asset_path('package:')
-        True
-        >>> is_asset_path('package.subpackage:rel/path')
-        True
-        >>> is_asset_path('pack-age.subpackage:')
-        False
-        >>> is_asset_path('pack-age.subpackage:rel/path')
-        False
-        >>> is_asset_path('base.ini')
-        False
-
-    """
-    if os.path.isabs(path) or ':' not in path:
-        return False
-    pkg_path, fs_path = path.split(':', 1)
-    parts = pkg_path.split('.')
-    return all(p.isidentifier() for p in parts)
 
 
 def abs_path(path):
