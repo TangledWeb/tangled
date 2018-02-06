@@ -96,6 +96,28 @@ def load_object(obj, obj_name=None, package=None, level=2):
     return obj
 
 
+def is_module_path(path) -> bool:
+    """Is ``path`` a module path like ``package.module``?
+
+    Examples::
+
+        >>> is_module_path('package')
+        True
+        >>> is_module_path('package.module')
+        True
+        >>> is_module_path('.module')
+        True
+        >>> is_module_path('package.module:obj')
+        False
+        >>> is_module_path('a/b')
+        False
+        >>> is_module_path('/a/b')
+        False
+
+    """
+    return all(p.isidentifier() for p in path.lstrip('.').split('.'))
+
+
 def asset_path(path, *rel_path):
     """Get absolute path to asset in package.
 
