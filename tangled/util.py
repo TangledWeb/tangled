@@ -205,6 +205,8 @@ def asset_path(path, *rel_path):
         '.../tangled/tangled/x/y'
 
     """
+    if not (is_asset_path(path) or is_module_path(path)):
+        raise ValueError('Path is not an asset path: %s' % path)
     if ':' in path:
         package_name, base_rel_path = path.split(':')
         rel_path = (base_rel_path,) + rel_path
