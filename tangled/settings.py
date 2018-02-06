@@ -1,70 +1,10 @@
+import builtins
 import configparser
+import json
 import os
-import re
 
-from tangled.converters import get_converter
-from tangled.util import abs_path, get_items_with_key_prefix, is_asset_path
-
-
-CONVERTER_KEY_RE = re.compile(r'^\((?P<converter>[a-z_]+)\)(?P<k>.+)$')
-
-
-def parse_settings(settings, conversion_map={}, defaults={}, required=(),
-                   prefix=None, strip_prefix=True):
-    """Convert the values of ``settings``.
-
-    To convert only a subset of the settings, pass ``prefix``; only the
-    settings with a key matching ``prefix`` will be returned (see
-    :func:`get_items_with_key_prefix` for details).
-
-    Settings passed via ``defaults`` will be added if they're not
-    already present in ``settings`` (and they'll be converted too).
-
-    Required fields can be listed in ``required``. If any required
-    fields are missing, a ``ValueError`` will be raised.
-
-    For each setting...
-
-        - If the key for the setting specifies a converter via the
-          ``(converter)key`` syntax, the specified converter will be
-          called to convert its value (the converter must be a builtin
-          or a function from :mod:`tangled.converters`).
-
-        - If the key for the setting is in ``conversion_map``, the
-          function it maps to will be used to convert its value.
-
-        - If the special key '*' is in ``conversion_map``, the function
-          it maps to will be used to convert the setting.
-
-        - Otherwise, the value will be used as is (i.e., as a string).
-
-    The original ``settings`` dict will not be changed.
-
-    """
-    fallback_converter = conversion_map.get('*')
-    fallback_converter = get_converter(fallback_converter) if fallback_converter else None
-    parsed_settings = {}
-    if prefix is not None:
-        settings = get_items_with_key_prefix(settings, prefix, strip_prefix)
-    for k, v in defaults.items():
-        settings.setdefault(k, v)
-    for k, v in settings.items():
-        if isinstance(v, str):
-            match = CONVERTER_KEY_RE.search(k)
-            if match:
-                k = match.group('k')
-                converter = match.group('converter')
-                converter = get_converter(converter)
-            elif k in conversion_map:
-                converter = get_converter(conversion_map[k])
-            else:
-                converter = fallback_converter
-            if converter is not None:
-                v = converter(v)
-        parsed_settings[k] = v
-    if required:
-        check_required(parsed_settings, required)
-    return parsed_settings
+from tangled.util import (
+    abs_path, get_items_with_key_prefix, is_asset_path, is_object_path, load_object)
 
 
 def parse_settings_file(path, section='app', interpolation=None, meta_settings=True, **kwargs):
@@ -84,10 +24,11 @@ def parse_settings_file(path, section='app', interpolation=None, meta_settings=T
     """
     file_name = abs_path(path)
     file_dir = os.path.dirname(file_name)
-    defaults = {'__dir__': file_dir}
+    defaults = {'__dir__': json.dumps(file_dir)}
     if interpolation is None:
         interpolation = configparser.ExtendedInterpolation()
-    parser = configparser.ConfigParser(defaults=defaults, interpolation=interpolation)
+    parser = configparser.ConfigParser(
+        defaults=defaults, delimiters='=', interpolation=interpolation)
 
     with open(file_name) as fp:
         parser.read_file(fp)
@@ -97,7 +38,13 @@ def parse_settings_file(path, section='app', interpolation=None, meta_settings=T
     except KeyError:
         raise ValueError('Settings file has no [{}] section'.format(section))
 
-    settings = parse_settings(settings, **kwargs)
+    try:
+        settings = parse_settings(settings, **kwargs)
+    except ValueError as exc:
+        file_name = os.path.relpath(file_name, os.getcwd())
+        message = '{exc} in {file_name}'.format_map(locals())
+        raise ValueError(message) from None
+
     required = kwargs.pop('required', None)
 
     if meta_settings:
@@ -129,6 +76,72 @@ def parse_settings_file(path, section='app', interpolation=None, meta_settings=T
     return settings
 
 
+def parse_settings(settings, defaults={}, required=(), extra={}, prefix=None, strip_prefix=True):
+    """Convert settings values.
+
+    All settings values should be JSON-encoded strings. For example::
+
+        debug = true
+        factory:object = "tangled.web:Application"
+        something:package.module:SomeClass = "value"
+
+    Settings passed via ``defaults`` will be added if they're not
+    already present in ``settings``.
+
+    To convert only a subset of the settings, pass ``prefix``; only the
+    settings with a key matching ``prefix`` will be returned (see
+    :func:`get_items_with_key_prefix` for details).
+
+    Required fields can be listed in ``required``. If any required
+    fields are missing, a ``ValueError`` will be raised.
+
+    For each setting:
+
+        - If the key specifies a type using ``key:type`` syntax, the
+          specified type will be used to parse the value. The type can
+          refer to any callable that accepts a single string.
+
+          If the type is specified as ``object``, :func:`.load_object()`
+          will be used to parse the value.
+
+          The ``:type`` will be stripped from the key.
+
+        - Otherwise, the value will be passed to ``json.loads()``.
+
+    The original ``settings`` dict will not be modified.
+
+    """
+    loads = json.loads
+    parsed_settings = {}
+    parsed_settings.update(defaults)
+
+    if prefix is not None:
+        settings = get_items_with_key_prefix(settings, prefix, strip_prefix)
+
+    for key, value in settings.items():
+        value = value.strip()
+        if not value:
+            value = None
+        else:
+            key, *rest = key.split(':', 1)
+            try:
+                value = loads(value)
+            except ValueError:
+                message = 'Could not parse JSON value for {key}'.format(key=key)
+                raise ValueError(message) from None
+            if rest:
+                kind = get_type(rest[0])
+                value = kind(value)
+        parsed_settings[key] = value
+
+    parsed_settings.update(extra)
+
+    if required:
+        check_required(parsed_settings, required)
+
+    return parsed_settings
+
+
 def check_required(settings, required):
     """Ensure ``settings`` contains the ``required`` keys."""
     missing = []
@@ -138,3 +151,16 @@ def check_required(settings, required):
     if missing:
         raise ValueError(
             'Missing required settings: {}'.format(', '.join(missing)))
+
+
+def get_type(name: str):
+    """Get the type corresponding to ``name``."""
+    if name is None:
+        return str
+    if name == 'object':
+        return load_object
+    if hasattr(builtins, name):
+        return getattr(builtins, name)
+    if is_object_path(name):
+        return load_object(name)
+    raise TypeError('Unknown type: %s' % name)

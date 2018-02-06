@@ -1,12 +1,11 @@
 import datetime
 import os
 import re
-import sys
 from subprocess import check_call
 
 from tangled.abcs import ACommand
-from tangled.converters import as_bool
 from tangled.decorators import cached_property
+from tangled.util import as_bool
 
 
 setup_version_pattern = (

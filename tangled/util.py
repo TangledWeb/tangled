@@ -240,6 +240,27 @@ def abs_path(path):
     return path
 
 
+BOOL_STR_MAP = {
+    True: ('true', 'yes', 'y', 'on', '1'),
+    False: ('false', 'no', 'n', 'off', '0'),
+}
+
+
+STR_BOOL_MAP = {}
+for b, strs in BOOL_STR_MAP.items():
+    for s in strs:
+        STR_BOOL_MAP[s] = b
+
+
+def as_bool(v):
+    if isinstance(v, str):
+        try:
+            return STR_BOOL_MAP[v.strip().lower()]
+        except KeyError:
+            raise ValueError('Could not convert {} to bool'.format(v))
+    return bool(v)
+
+
 def filter_items(items,
                  include=lambda k, v: True,
                  exclude=lambda k, v: False,

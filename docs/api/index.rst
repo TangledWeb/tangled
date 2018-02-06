@@ -7,12 +7,6 @@ Abstract Base Classes
 .. automodule:: tangled.abcs
     :members:
 
-Converters
-==========
-
-.. automodule:: tangled.converters
-    :members:
-
 Decorators
 ==========
 
