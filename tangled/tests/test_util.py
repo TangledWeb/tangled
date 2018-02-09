@@ -28,23 +28,23 @@ class Test_asset_path(unittest.TestCase):
 
     def test_asset_path(self):
         path = util.asset_path('tangled.util:dir/file')
-        self.assertTrue(path.endswith('/tangled/tangled/dir/file'))
+        self.assertTrue(path.endswith('/tangled/tangled/util/dir/file'))
 
     def test_asset_path_with_rel_path(self):
         path = util.asset_path('tangled.util', 'dir/file')
-        self.assertTrue(path.endswith('/tangled/tangled/dir/file'))
+        self.assertTrue(path.endswith('/tangled/tangled/util/dir/file'))
 
     def test_asset_path_with_base_rel_path(self):
         path = util.asset_path('tangled.util:dir', 'file')
-        self.assertTrue(path.endswith('/tangled/tangled/dir/file'))
+        self.assertTrue(path.endswith('/tangled/tangled/util/dir/file'))
 
     def test_asset_path_for_package(self):
         path = util.asset_path('tangled.util')
-        self.assertTrue(path.endswith('/tangled/tangled'))
+        self.assertTrue(path.endswith('/tangled/tangled/util'))
 
     def test_asset_path_for_module(self):
         path = util.asset_path('tangled.util')
-        self.assertTrue(path.endswith('/tangled/tangled'))
+        self.assertTrue(path.endswith('/tangled/tangled/util'))
 
     def test_asset_path_for_namespace_pacakge_raises_ValueError(self):
         self.assertRaises(ValueError, util.asset_path, 'tangled')
@@ -66,7 +66,7 @@ class Test_abs_path(unittest.TestCase):
         path = util.abs_path('tangled.util:x/y')
         self.assertTrue(os.path.isabs(path))
         expected = os.path.join(os.path.dirname(util.__file__), 'x/y')
-        self.assertTrue(path.endswith('/tangled/tangled/x/y'))
+        self.assertTrue(path.endswith('/tangled/tangled/util/x/y'))
         self.assertEqual(path, expected)
 
 
