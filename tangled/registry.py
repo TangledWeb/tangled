@@ -84,7 +84,7 @@ class Registry(ARegistry):
         if as_dict:
             return components
         else:
-            return list(components.values())
+            return tuple(components.values())
 
     def remove(self, key, differentiator=None):
         del self._components[key][differentiator]
